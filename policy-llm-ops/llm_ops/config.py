@@ -21,7 +21,10 @@ class Settings:
         self.canary_fraction = float(os.getenv("CANARY_FRACTION", "0.05"))
         self.canary_min_samples = int(os.getenv("CANARY_MIN_SAMPLES", "30"))
         self.canary_slo_window = int(os.getenv("CANARY_SLO_WINDOW", "200"))
+        self.p95_regression_max = float(os.getenv("P95_REGRESSION_MAX", "0.2"))
         self.citation_min_coverage = float(os.getenv("CITATION_MIN_COVERAGE", "0.5"))
+        self.fake_model_delay_ms = float(os.getenv("FAKE_MODEL_DELAY_MS", "0"))
+        self.fake_model_error_every = int(os.getenv("FAKE_MODEL_ERROR_EVERY", "0"))
         self.redact_logs = os.getenv("REDACT_LOGS", "true").lower() == "true"
 
 

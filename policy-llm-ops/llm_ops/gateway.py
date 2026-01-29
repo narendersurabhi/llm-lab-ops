@@ -24,7 +24,7 @@ from llm_ops.metrics import (
     TOKENS_IN,
     TOKENS_OUT,
 )
-from llm_ops.model import LlamaCppClient, MockModelClient, ModelClient
+from llm_ops.model import FakeModelClient, LlamaCppClient, MockModelClient, ModelClient
 from llm_ops.observability import init_tracing, instrument_app
 from llm_ops.release_manager import ReleaseManager, ReleaseBundle
 from llm_ops.tools import RetrievalTool
@@ -46,6 +46,10 @@ tracer = trace.get_tracer(__name__)
 def _build_model(is_canary: bool) -> ModelClient:
     if settings.llm_provider == "mock":
         return MockModelClient()
+    if settings.llm_provider == "fake":
+        return FakeModelClient(mode="normal")
+    if settings.llm_provider == "fake_regression":
+        return FakeModelClient(mode="regression")
     if is_canary:
         return MockModelClient()
     return LlamaCppClient()
@@ -63,7 +67,7 @@ def init_runtime() -> None:
             retrieval=RetrievalTool(db_path=release_bundle.index_path),
             model=_build_model(True),
         )
-        canary = CanaryController(release_bundle.model_dir)
+        canary = CanaryController(release_bundle.eval_report_path)
     else:
         canary_agent = None
         canary = None
@@ -151,7 +155,9 @@ async def metrics() -> Response:
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
-async def chat_completions(req: ChatCompletionRequest, response: Response) -> ChatCompletionResponse:
+async def chat_completions(
+    req: ChatCompletionRequest, response: Response
+) -> ChatCompletionResponse:
     if agent is None:
         raise HTTPException(status_code=500, detail="Agent runtime not initialized")
     req_id = request_id_var.get() or str(uuid.uuid4())

@@ -60,27 +60,34 @@ graph TD
 
 ## Contracts
 Artifacts emitted by `policy-llm-lab`:
-- `model.gguf` (placeholder if not present)
-- `model_card.json`
-- `eval_report.json`
 - `manifest.json` (release bundle manifest)
+- `model/model_card.json`
+- `model/model.gguf`
+- `eval/eval_report.json`
+- `index/index.sqlite`
 
 Schemas live in `policy-llm-lab/contracts/` (and are mirrored in `contracts/` for ops validation).
 
-Release bundle layout (`policy-llm-lab/release/`):
+Release bundle layout (`policy-llm-lab/dist/<release_id>/`):
 ```
-release/
+dist/<release_id>/
   manifest.json
-  sbom.json
-  checksums.json
-  attestation.json
-  CHANGELOG.md
   model/
-    model.gguf
     model_card.json
-    eval_report.json
+    model.gguf
   index/
     index.sqlite
+  eval/
+    eval_report.json
+  contracts/
+    manifest.schema.json
+    model_card.schema.json
+    eval_report.schema.json
+  meta/
+    sbom.json
+    checksums.json
+    attestation.json
+    CHANGELOG.md
 ```
 
 ## Observability
@@ -102,18 +109,19 @@ Metrics exposed by gateway:
 ## Dev workflows
 ```bash
 make release   # generate eval + model card artifacts
-make test      # lint, typecheck, unit + integration tests
+make test      # unit/component/contract tests for lab + ops
 make lint      # lint only
+make contract-all  # build lab release + run ops contract tests
+make test-integration  # docker compose integration tests
+make e2e       # canary rollback simulation
 make loadtest  # basic load test against gateway
 make kind-up   # kind cluster + helm install
 ```
 
 ## Release bundle demo
 ```bash
-cd policy-llm-lab
-python -m llm_lab.release.packager
-cd ..
-RELEASE_PATH=policy-llm-lab/release LLM_PROVIDER=mock make up
+make -C policy-llm-lab release RELEASE_ID=local-dev
+RELEASE_PATH=policy-llm-lab/dist/local-dev LLM_PROVIDER=mock make up
 ```
 
 The gateway validates the bundle, gates on `eval_report.pass`, and runs canary routing at 5%.

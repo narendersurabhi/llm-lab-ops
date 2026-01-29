@@ -254,7 +254,8 @@ class IndexBuilder:
             chunks = self.chunk_document(doc)
             for chunk in chunks:
                 conn.execute(
-                    "INSERT INTO chunks (chunk_id, doc_id, chunk_index, content) VALUES (?, ?, ?, ?)",
+                    "INSERT INTO chunks (chunk_id, doc_id, chunk_index, content) "
+                    "VALUES (?, ?, ?, ?)",
                     (chunk.chunk_id, chunk.doc_id, chunk.chunk_index, chunk.text),
                 )
                 conn.execute(

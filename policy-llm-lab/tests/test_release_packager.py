@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from jsonschema import validate
 
-from llm_lab.config import CONTRACTS_DIR, DATA_DIR
+from llm_lab.config import CONTRACTS_DIR
 from llm_lab.release.packager import RELEASE_LAYOUT, build_release
 
 
@@ -13,6 +14,7 @@ def _load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+@pytest.mark.unit
 def test_contract_examples_validate() -> None:
     examples_dir = CONTRACTS_DIR / "examples"
     manifest = _load_json(examples_dir / "manifest.json")
@@ -24,7 +26,8 @@ def test_contract_examples_validate() -> None:
     validate(instance=eval_report, schema=_load_json(CONTRACTS_DIR / "eval_report.schema.json"))
 
 
-def test_release_bundle_layout(tmp_path: Path) -> None:
+@pytest.mark.unit
+def test_release_bundle_layout(sample_docs: Path, tmp_path: Path) -> None:
     output_dir = tmp_path / "release"
     model_dir = tmp_path / "artifacts" / "model"
     eval_dir = tmp_path / "artifacts" / "eval"
@@ -32,7 +35,7 @@ def test_release_bundle_layout(tmp_path: Path) -> None:
 
     build_release(
         output_dir=output_dir,
-        data_dir=DATA_DIR,
+        data_dir=sample_docs,
         model_dir=model_dir,
         eval_dir=eval_dir,
         index_path=index_path,
@@ -74,3 +77,12 @@ def test_release_bundle_layout(tmp_path: Path) -> None:
     attestation = _load_json(attestation_path)
     assert attestation.get("manifest_sha256")
     assert attestation.get("checksums_sha256")
+
+    manifest = _load_json(manifest_path)
+    for section in ("model", "index", "eval", "contracts"):
+        for path_value in manifest["artifacts"][section].values():
+            assert not Path(path_value).is_absolute()
+    meta = manifest["artifacts"].get("meta", {})
+    for entry in meta.values():
+        for path_value in entry.values():
+            assert not Path(path_value).is_absolute()

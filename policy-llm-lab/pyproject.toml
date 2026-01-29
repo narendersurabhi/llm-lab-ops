@@ -21,6 +21,11 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "-q"
+markers = [
+  "unit: fast, deterministic unit tests",
+  "component: component-level tests (SQLite/index/retrieval)",
+  "contract: release bundle contract tests",
+]
 
 [tool.mypy]
 python_version = "3.11"

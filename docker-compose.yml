@@ -19,10 +19,12 @@ services:
       MODEL_DIR: /models
       LLAMA_CPP_URL: http://llama:8080
       LLM_PROVIDER: mock
+      RELEASE_PATH: /release
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
     volumes:
       - ./policy-llm-lab/artifacts/model:/models
+      - ./policy-llm-lab/dist/local-dev:/release:ro
     depends_on:
       - policy-llm-lab
       - jaeger

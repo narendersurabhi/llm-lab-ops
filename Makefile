@@ -1,4 +1,4 @@
-.PHONY: up test test-uv uv-test lint lint-uv kind-up loadtest release index ingest eval uv-venv uv-install
+.PHONY: up test lint typecheck kind-up loadtest release index ingest eval contract-all test-integration e2e uv-venv uv-install
 
 PYTHON ?= python3
 UV ?= uv
@@ -9,16 +9,16 @@ up:
 	docker compose up --build
 
 test:
-	cd policy-llm-lab && python -m pytest
-	cd policy-llm-ops && python -m pytest
-	cd policy-llm-lab && python -m ruff check .
-	cd policy-llm-ops && python -m ruff check .
-	cd policy-llm-lab && python -m mypy llm_lab
-	cd policy-llm-ops && python -m mypy llm_ops
+	$(MAKE) -C policy-llm-lab test
+	$(MAKE) -C policy-llm-ops test
 
 lint:
-	cd policy-llm-lab && python -m ruff check .
-	cd policy-llm-ops && python -m ruff check .
+	$(MAKE) -C policy-llm-lab lint
+	$(MAKE) -C policy-llm-ops lint
+
+typecheck:
+	$(MAKE) -C policy-llm-lab typecheck
+	$(MAKE) -C policy-llm-ops typecheck
 
 kind-up:
 	kind create cluster --config infra/kind/kind-config.yaml
@@ -32,16 +32,26 @@ loadtest:
 	python scripts/loadtest.py
 
 release:
-	cd policy-llm-lab && $(PYTHON) -m llm_lab.release.packager
+	$(MAKE) -C policy-llm-lab release
 
 index:
-	cd policy-llm-lab && $(PYTHON) -m llm_lab.indexer
+	$(MAKE) -C policy-llm-lab index
 
 ingest:
-	cd policy-llm-lab && $(PYTHON) -m llm_lab.ingest
+	$(MAKE) -C policy-llm-lab ingest
 
 eval:
-	cd policy-llm-lab && $(PYTHON) -m llm_lab.eval
+	$(MAKE) -C policy-llm-lab eval
+
+test-integration:
+	$(MAKE) -C policy-llm-ops test-integration
+
+e2e:
+	$(MAKE) -C policy-llm-ops e2e
+
+contract-all:
+	$(MAKE) -C policy-llm-lab release RELEASE_ID=local-dev RELEASE_DIR=dist/local-dev
+	RELEASE_PATH=policy-llm-lab/dist/local-dev $(MAKE) -C policy-llm-ops contract-test
 
 uv-venv:
 	$(UV) venv

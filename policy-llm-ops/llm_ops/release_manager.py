@@ -20,6 +20,7 @@ class ReleaseBundle:
     eval_report: dict[str, Any]
     model_dir: Path
     index_path: Path
+    eval_report_path: Path
     allowed: bool
 
 
@@ -39,15 +40,22 @@ class ReleaseManager:
             return self.base_dir / settings.release_id
         return self.base_dir
 
-    def load(self, release_path: str | Path | None = None, release_id: str | None = None) -> ReleaseBundle:
+    def load(
+        self,
+        release_path: str | Path | None = None,
+        release_id: str | None = None,
+    ) -> ReleaseBundle:
         path = self.resolve_path(release_path, release_id)
         manifest_path = path / "manifest.json"
-        model_card_path = path / "model" / "model_card.json"
-        eval_report_path = path / "model" / "eval_report.json"
-        index_path = path / "index" / "index.sqlite"
 
         if not manifest_path.exists():
             raise FileNotFoundError(f"Release manifest not found at {manifest_path}")
+
+        manifest = self._load_json(manifest_path)
+        model_card_path = self._resolve_artifact(path, manifest, "model", "model_card")
+        eval_report_path = self._resolve_artifact(path, manifest, "eval", "eval_report")
+        index_path = self._resolve_artifact(path, manifest, "index", "index_sqlite")
+
         if not model_card_path.exists():
             raise FileNotFoundError(f"Model card not found at {model_card_path}")
         if not eval_report_path.exists():
@@ -55,7 +63,6 @@ class ReleaseManager:
         if not index_path.exists():
             raise FileNotFoundError(f"Index not found at {index_path}")
 
-        manifest = self._load_json(manifest_path)
         model_card = self._load_json(model_card_path)
         eval_report = self._load_json(eval_report_path)
 
@@ -71,6 +78,7 @@ class ReleaseManager:
             eval_report=eval_report,
             model_dir=path / "model",
             index_path=index_path,
+            eval_report_path=eval_report_path,
             allowed=allowed,
         )
 
@@ -82,3 +90,17 @@ class ReleaseManager:
     def _validate(data: dict[str, Any], schema_path: Path) -> None:
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
         validate(instance=data, schema=schema)
+
+    @staticmethod
+    def _resolve_artifact(
+        bundle_path: Path, manifest: dict[str, Any], section: str, name: str
+    ) -> Path:
+        artifacts = manifest.get("artifacts", {})
+        section_data = artifacts.get(section, {})
+        rel_path = section_data.get(name)
+        if not rel_path:
+            raise KeyError(f"Missing manifest artifact {section}.{name}")
+        rel = Path(rel_path)
+        if rel.is_absolute():
+            raise ValueError(f"Artifact path must be relative: {rel_path}")
+        return bundle_path / rel

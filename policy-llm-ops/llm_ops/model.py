@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import Tuple
 
@@ -40,5 +41,35 @@ class MockModelClient(ModelClient):
     async def generate(self, prompt: str, max_tokens: int = 256) -> Tuple[str, float]:
         start = time.perf_counter()
         text = "(mock) " + prompt.split("Question:")[-1].strip()
+        latency_ms = (time.perf_counter() - start) * 1000
+        return text, latency_ms
+
+
+class FakeModelClient(ModelClient):
+    def __init__(
+        self,
+        mode: str = "normal",
+        delay_ms: float | None = None,
+        error_every: int | None = None,
+    ) -> None:
+        self.mode = mode
+        if delay_ms is None:
+            delay_ms = settings.fake_model_delay_ms
+        if error_every is None:
+            error_every = settings.fake_model_error_every
+        if self.mode == "regression" and delay_ms == 0:
+            delay_ms = 250.0
+        self.delay_ms = delay_ms
+        self.error_every = error_every or 0
+        self._counter = 0
+
+    async def generate(self, prompt: str, max_tokens: int = 256) -> Tuple[str, float]:
+        start = time.perf_counter()
+        self._counter += 1
+        if self.error_every and (self._counter % self.error_every == 0):
+            raise RuntimeError("Simulated model error")
+        if self.delay_ms:
+            await asyncio.sleep(self.delay_ms / 1000.0)
+        text = "(fake) " + prompt.split("Question:")[-1].strip()
         latency_ms = (time.perf_counter() - start) * 1000
         return text, latency_ms

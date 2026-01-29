@@ -420,7 +420,9 @@ def build_release(
 
 
 def main() -> None:
-    release_dir = build_release()
+    release_dir_env = os.getenv("RELEASE_DIR")
+    output_dir = Path(release_dir_env) if release_dir_env else RELEASE_DIR
+    release_dir = build_release(output_dir=output_dir)
     print(f"Release bundle written to {release_dir}")
 
 

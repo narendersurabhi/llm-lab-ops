@@ -30,6 +30,13 @@ dev = [
 
 [tool.pytest.ini_options]
 addopts = "-q"
+markers = [
+  "unit: fast, deterministic unit tests",
+  "integration: docker compose integration tests",
+  "e2e: end-to-end rollout/rollback tests",
+  "contract: cross-repo contract tests",
+]
+asyncio_mode = "auto"
 
 [tool.mypy]
 python_version = "3.11"

@@ -5,7 +5,7 @@ from typing import Any
 
 from llm_ops.config import settings
 from llm_ops.graph import build_graph
-from llm_ops.model import LlamaCppClient, MockModelClient, ModelClient
+from llm_ops.model import FakeModelClient, LlamaCppClient, MockModelClient, ModelClient
 from llm_ops.tools import PolicyTool, QuoteTool, RetrievalTool
 
 
@@ -33,6 +33,10 @@ class LangGraphAgent:
             self.model = model
         elif settings.llm_provider == "mock":
             self.model = MockModelClient()
+        elif settings.llm_provider == "fake":
+            self.model = FakeModelClient(mode="normal")
+        elif settings.llm_provider == "fake_regression":
+            self.model = FakeModelClient(mode="regression")
         else:
             self.model = LlamaCppClient()
         self.policy = policy or PolicyTool()
