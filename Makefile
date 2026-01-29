@@ -1,4 +1,9 @@
-.PHONY: up test lint kind-up loadtest release
+.PHONY: up test test-uv uv-test lint lint-uv kind-up loadtest release index ingest eval uv-venv uv-install
+
+PYTHON ?= python3
+UV ?= uv
+UV_PYTHON ?= 3.11
+UV_RUN = $(UV) run --python $(UV_PYTHON)
 
 up:
 	docker compose up --build
@@ -27,4 +32,21 @@ loadtest:
 	python scripts/loadtest.py
 
 release:
-	cd policy-llm-lab && python -m llm_lab.release
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.release.packager
+
+index:
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.indexer
+
+ingest:
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.ingest
+
+eval:
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.eval
+
+uv-venv:
+	$(UV) venv
+
+uv-install:
+	$(UV) venv
+	$(UV) pip install -e ./policy-llm-lab[dev]
+	$(UV) pip install -e ./policy-llm-ops[dev]
