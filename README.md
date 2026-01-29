@@ -104,6 +104,16 @@ make loadtest  # basic load test against gateway
 make kind-up   # kind cluster + helm install
 ```
 
+## Release bundle demo
+```bash
+cd policy-llm-lab
+python -m llm_lab.release.packager
+cd ..
+RELEASE_PATH=policy-llm-lab/release LLM_PROVIDER=mock make up
+```
+
+The gateway validates the bundle, gates on `eval_report.pass`, and runs canary routing at 5%.
+
 ## Notes
 - TTFT is approximated for non-streaming llama.cpp calls (same as latency).
 - Logs intentionally exclude user content and redact emails/phones/numbers.

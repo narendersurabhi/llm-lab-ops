@@ -24,7 +24,10 @@ from llm_ops.metrics import (
     TOKENS_IN,
     TOKENS_OUT,
 )
+from llm_ops.model import LlamaCppClient, MockModelClient, ModelClient
 from llm_ops.observability import init_tracing, instrument_app
+from llm_ops.release_manager import ReleaseManager, ReleaseBundle
+from llm_ops.tools import RetrievalTool
 
 logger = setup_logging()
 init_tracing()
@@ -32,22 +35,59 @@ init_tracing()
 app = FastAPI(title="Policy LLM Ops Gateway", version="0.1.0")
 instrument_app(app)
 
-agent = LangGraphAgent()
-canary = CanaryController(settings.model_dir) if settings.canary_enabled else None
+agent: LangGraphAgent | None = None
+canary_agent: LangGraphAgent | None = None
+canary: CanaryController | None = None
+release_bundle: ReleaseBundle | None = None
+release_manager = ReleaseManager()
 tracer = trace.get_tracer(__name__)
+
+
+def _build_model(is_canary: bool) -> ModelClient:
+    if settings.llm_provider == "mock":
+        return MockModelClient()
+    if is_canary:
+        return MockModelClient()
+    return LlamaCppClient()
+
+
+def init_runtime() -> None:
+    global agent, canary_agent, canary, release_bundle
+    release_bundle = release_manager.load()
+    if not release_bundle.allowed:
+        raise RuntimeError("Release gate failed: eval_report.pass is false")
+    retrieval = RetrievalTool(db_path=release_bundle.index_path)
+    agent = LangGraphAgent(retrieval=retrieval, model=_build_model(False))
+    if settings.canary_enabled:
+        canary_agent = LangGraphAgent(
+            retrieval=RetrievalTool(db_path=release_bundle.index_path),
+            model=_build_model(True),
+        )
+        canary = CanaryController(release_bundle.model_dir)
+    else:
+        canary_agent = None
+        canary = None
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    init_runtime()
 
 
 @app.on_event("shutdown")
 async def shutdown() -> None:
-    try:
-        await agent.retrieval.close()
-    except Exception:  # noqa: BLE001
-        pass
-    if hasattr(agent.model, "close"):
+    for active_agent in [agent, canary_agent]:
+        if active_agent is None:
+            continue
         try:
-            await agent.model.close()  # type: ignore[attr-defined]
+            await active_agent.retrieval.close()
         except Exception:  # noqa: BLE001
             pass
+        if hasattr(active_agent.model, "close"):
+            try:
+                await active_agent.model.close()  # type: ignore[attr-defined]
+            except Exception:  # noqa: BLE001
+                pass
 
 
 class ChatMessage(BaseModel):
@@ -111,18 +151,22 @@ async def metrics() -> Response:
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
-async def chat_completions(req: ChatCompletionRequest) -> ChatCompletionResponse:
+async def chat_completions(req: ChatCompletionRequest, response: Response) -> ChatCompletionResponse:
+    if agent is None:
+        raise HTTPException(status_code=500, detail="Agent runtime not initialized")
     req_id = request_id_var.get() or str(uuid.uuid4())
     start = time.perf_counter()
     variant = canary.choose_variant() if canary else "stable"
+    response.headers["x-llm-variant"] = variant
+    active_agent = canary_agent if variant == "canary" and canary_agent else agent
     if should_sample_prompt():
         log_event(logger, "prompt_sample", messages=[m.model_dump() for m in req.messages])
 
     with tracer.start_as_current_span("langgraph_run"):
         try:
-            response = await agent.run([m.model_dump() for m in req.messages])
+            response = await active_agent.run([m.model_dump() for m in req.messages])
         except Exception as exc:  # noqa: BLE001
-            if canary:
+            if canary and variant == "canary":
                 canary.record(
                     latency_ms=(time.perf_counter() - start) * 1000,
                     is_error=True,
@@ -138,7 +182,7 @@ async def chat_completions(req: ChatCompletionRequest) -> ChatCompletionResponse
     TOKENS_OUT.inc(response.tokens_out)
     CITATION_COVERAGE.set(response.citation_coverage)
 
-    if canary:
+    if canary and variant == "canary":
         canary.record(
             latency_ms=latency_ms,
             is_error=False,
