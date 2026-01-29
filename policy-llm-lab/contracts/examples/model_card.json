@@ -1,10 +1,22 @@
 {
-  "model_name": "local-llama-gguf",
-  "version": "0.1.0",
+  "release_id": "dev-abcdef1",
+  "bundle_version": "0.1.0",
   "created_at": "2026-01-29T00:00:00Z",
-  "description": "Example model card for release bundle validation.",
-  "license": "unknown",
-  "quantization": "Q4_K_M",
+  "git_sha": "abcdef1234567890abcdef1234567890abcdef12",
+  "model_name": "local-llama-gguf",
+  "base_model": {"name": "llama", "version": "2-7b"},
+  "tuning_method": "none",
+  "training_config_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "dataset_fingerprint": {
+    "algo": "sha256",
+    "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "runtime_compatibility": ["llama.cpp"],
+  "quantization": {"format": "Q4_K_M", "bits": 4, "group_size": 32},
   "parameters": 7000000000,
-  "tags": ["example", "gguf"]
+  "license": "unknown",
+  "tags": ["example", "gguf"],
+  "intended_use": "Example model card for release bundle validation.",
+  "limitations": "Example-only metadata; not production-qualified.",
+  "eval_report_path": "eval/eval_report.json"
 }

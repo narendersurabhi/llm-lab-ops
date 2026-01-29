@@ -27,12 +27,14 @@ def test_contract_examples_validate() -> None:
 def test_release_bundle_layout(tmp_path: Path) -> None:
     output_dir = tmp_path / "release"
     model_dir = tmp_path / "artifacts" / "model"
+    eval_dir = tmp_path / "artifacts" / "eval"
     index_path = tmp_path / "artifacts" / "index.sqlite"
 
     build_release(
         output_dir=output_dir,
         data_dir=DATA_DIR,
         model_dir=model_dir,
+        eval_dir=eval_dir,
         index_path=index_path,
         contracts_dir=CONTRACTS_DIR,
     )
@@ -46,10 +48,19 @@ def test_release_bundle_layout(tmp_path: Path) -> None:
     for name in RELEASE_LAYOUT["index"]:
         assert (output_dir / "index" / name).exists()
 
-    sbom_path = output_dir / RELEASE_LAYOUT["sbom"]
-    checksums_path = output_dir / RELEASE_LAYOUT["checksums"]
-    attestation_path = output_dir / RELEASE_LAYOUT["attestation"]
-    changelog_path = output_dir / RELEASE_LAYOUT["changelog"]
+    for name in RELEASE_LAYOUT["eval"]:
+        assert (output_dir / "eval" / name).exists()
+
+    for name in RELEASE_LAYOUT["contracts"]:
+        assert (output_dir / "contracts" / name).exists()
+
+    for name in RELEASE_LAYOUT["meta"]:
+        assert (output_dir / "meta" / name).exists()
+
+    sbom_path = output_dir / "meta" / "sbom.json"
+    checksums_path = output_dir / "meta" / "checksums.json"
+    attestation_path = output_dir / "meta" / "attestation.json"
+    changelog_path = output_dir / "meta" / "CHANGELOG.md"
 
     assert sbom_path.exists()
     assert checksums_path.exists()
@@ -58,7 +69,7 @@ def test_release_bundle_layout(tmp_path: Path) -> None:
 
     checksums = _load_json(checksums_path)
     assert RELEASE_LAYOUT["manifest"] in checksums
-    assert RELEASE_LAYOUT["sbom"] in checksums
+    assert "meta/sbom.json" in checksums
 
     attestation = _load_json(attestation_path)
     assert attestation.get("manifest_sha256")

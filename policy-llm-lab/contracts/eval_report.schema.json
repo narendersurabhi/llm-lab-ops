@@ -3,60 +3,133 @@
   "$id": "https://example.com/schemas/eval_report.schema.json",
   "title": "EvalReport",
   "type": "object",
-  "required": ["pass", "created_at", "eval_dataset", "metrics", "baseline", "thresholds"],
+  "additionalProperties": false,
+  "required": [
+    "release_id",
+    "baseline_release_id",
+    "created_at",
+    "eval_dataset",
+    "pass",
+    "metrics",
+    "thresholds",
+    "regressions"
+  ],
+  "$defs": {
+    "git_sha": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+    "release_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"
+    },
+    "metric_value": {"type": "number"},
+    "metric_delta": {"type": ["number", "null"]},
+    "metric_threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": {"type": "number"},
+        "max": {"type": "number"}
+      },
+      "anyOf": [{"required": ["min"]}, {"required": ["max"]}]
+    }
+  },
   "properties": {
-    "pass": {"type": "boolean"},
+    "release_id": {"$ref": "#/$defs/release_id"},
+    "baseline_release_id": {
+      "anyOf": [{"$ref": "#/$defs/release_id"}, {"const": "none"}]
+    },
     "created_at": {"type": "string", "format": "date-time"},
-    "eval_dataset": {"type": "string"},
+    "eval_dataset": {"type": "string", "minLength": 1},
+    "git_sha": {"$ref": "#/$defs/git_sha"},
+    "pass": {"type": "boolean"},
     "metrics": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
-        "retrieval_recall",
+        "latency_p50_ms",
+        "latency_p95_ms",
+        "ttft_ms",
+        "tokens_per_second",
+        "error_rate",
+        "tool_call_success_rate",
         "retrieval_hit_rate",
-        "recall_at_5",
-        "citation_coverage",
-        "num_queries"
+        "citation_coverage"
       ],
       "properties": {
-        "retrieval_recall": {"type": "number", "minimum": 0, "maximum": 1},
-        "retrieval_hit_rate": {"type": "number", "minimum": 0, "maximum": 1},
-        "recall_at_5": {"type": "number", "minimum": 0, "maximum": 1},
-        "citation_coverage": {"type": "number", "minimum": 0, "maximum": 1},
-        "num_queries": {"type": "integer", "minimum": 1}
-      },
-      "additionalProperties": false
+        "latency_p50_ms": {"$ref": "#/$defs/metric_value"},
+        "latency_p95_ms": {"$ref": "#/$defs/metric_value"},
+        "ttft_ms": {"$ref": "#/$defs/metric_value"},
+        "tokens_per_second": {"$ref": "#/$defs/metric_value"},
+        "error_rate": {"$ref": "#/$defs/metric_value"},
+        "tool_call_success_rate": {"$ref": "#/$defs/metric_value"},
+        "retrieval_hit_rate": {"$ref": "#/$defs/metric_value"},
+        "citation_coverage": {"$ref": "#/$defs/metric_value"},
+        "retrieval_recall": {"$ref": "#/$defs/metric_value"},
+        "recall_at_5": {"$ref": "#/$defs/metric_value"}
+      }
     },
     "thresholds": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
-        "retrieval_hit_rate_min",
-        "recall_at_5_min",
-        "citation_coverage_min",
-        "runtime_error_rate_max",
-        "runtime_p95_regression_max",
-        "runtime_tool_success_min"
+        "latency_p50_ms",
+        "latency_p95_ms",
+        "ttft_ms",
+        "tokens_per_second",
+        "error_rate",
+        "tool_call_success_rate",
+        "retrieval_hit_rate",
+        "citation_coverage"
       ],
       "properties": {
-        "retrieval_hit_rate_min": {"type": "number", "minimum": 0, "maximum": 1},
-        "recall_at_5_min": {"type": "number", "minimum": 0, "maximum": 1},
-        "citation_coverage_min": {"type": "number", "minimum": 0, "maximum": 1},
-        "runtime_error_rate_max": {"type": "number", "minimum": 0, "maximum": 1},
-        "runtime_p95_regression_max": {"type": "number", "minimum": 0, "maximum": 1},
-        "runtime_tool_success_min": {"type": "number", "minimum": 0, "maximum": 1}
-      },
-      "additionalProperties": false
+        "latency_p50_ms": {"$ref": "#/$defs/metric_threshold"},
+        "latency_p95_ms": {"$ref": "#/$defs/metric_threshold"},
+        "ttft_ms": {"$ref": "#/$defs/metric_threshold"},
+        "tokens_per_second": {"$ref": "#/$defs/metric_threshold"},
+        "error_rate": {"$ref": "#/$defs/metric_threshold"},
+        "tool_call_success_rate": {"$ref": "#/$defs/metric_threshold"},
+        "retrieval_hit_rate": {"$ref": "#/$defs/metric_threshold"},
+        "citation_coverage": {"$ref": "#/$defs/metric_threshold"},
+        "retrieval_recall": {"$ref": "#/$defs/metric_threshold"},
+        "recall_at_5": {"$ref": "#/$defs/metric_threshold"}
+      }
     },
-    "baseline": {
+    "regressions": {
       "type": "object",
-      "required": ["p95_latency_ms", "error_rate", "tool_success_rate"],
+      "additionalProperties": false,
+      "required": [
+        "latency_p50_ms",
+        "latency_p95_ms",
+        "ttft_ms",
+        "tokens_per_second",
+        "error_rate",
+        "tool_call_success_rate",
+        "retrieval_hit_rate",
+        "citation_coverage"
+      ],
       "properties": {
-        "p95_latency_ms": {"type": "number", "minimum": 0},
-        "error_rate": {"type": "number", "minimum": 0, "maximum": 1},
-        "tool_success_rate": {"type": "number", "minimum": 0, "maximum": 1}
-      },
-      "additionalProperties": false
+        "latency_p50_ms": {"$ref": "#/$defs/metric_delta"},
+        "latency_p95_ms": {"$ref": "#/$defs/metric_delta"},
+        "ttft_ms": {"$ref": "#/$defs/metric_delta"},
+        "tokens_per_second": {"$ref": "#/$defs/metric_delta"},
+        "error_rate": {"$ref": "#/$defs/metric_delta"},
+        "tool_call_success_rate": {"$ref": "#/$defs/metric_delta"},
+        "retrieval_hit_rate": {"$ref": "#/$defs/metric_delta"},
+        "citation_coverage": {"$ref": "#/$defs/metric_delta"},
+        "retrieval_recall": {"$ref": "#/$defs/metric_delta"},
+        "recall_at_5": {"$ref": "#/$defs/metric_delta"}
+      }
+    },
+    "failure_reasons": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
     },
     "notes": {"type": "string"}
   },
-  "additionalProperties": false
+  "allOf": [
+    {
+      "if": {"properties": {"pass": {"const": false}}},
+      "then": {"required": ["failure_reasons"]}
+    }
+  ]
 }
