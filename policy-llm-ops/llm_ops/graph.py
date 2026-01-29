@@ -6,14 +6,8 @@ from langgraph.graph import END, StateGraph
 from opentelemetry import trace
 
 from llm_ops.model import ModelClient
-from llm_ops.tools import (
-    Citation,
-    PolicyDecision,
-    PolicyTool,
-    QuoteTool,
-    RetrievalResult,
-    RetrievalTool,
-)
+from llm_ops.retrieval_tool import RetrievalToolProtocol
+from llm_ops.tools import Citation, PolicyDecision, PolicyTool, QuoteTool, RetrievalResult
 
 
 class AgentState(TypedDict, total=False):
@@ -77,7 +71,7 @@ def route_precheck(state: AgentState) -> Literal["retrieve", "fallback"]:
     return "fallback" if state.get("fallback_reason") else "retrieve"
 
 
-def make_retrieve_node(retrieval: RetrievalTool) -> Callable[[AgentState], Any]:
+def make_retrieve_node(retrieval: RetrievalToolProtocol) -> Callable[[AgentState], Any]:
     tracer = trace.get_tracer(__name__)
 
     async def retrieve_node(state: AgentState) -> dict[str, Any]:
@@ -170,7 +164,10 @@ def fallback_node(state: AgentState) -> dict[str, Any]:
 
 
 def build_graph(
-    retrieval: RetrievalTool, policy: PolicyTool, quote: QuoteTool, model: ModelClient
+    retrieval: RetrievalToolProtocol,
+    policy: PolicyTool,
+    quote: QuoteTool,
+    model: ModelClient,
 ):
     graph: StateGraph[AgentState] = StateGraph(AgentState)
     graph.add_node("precheck", precheck_node)
