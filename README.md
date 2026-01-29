@@ -63,21 +63,8 @@ Artifacts emitted by `policy-llm-lab`:
 - `model.gguf` (placeholder if not present)
 - `model_card.json`
 - `eval_report.json`
-- `manifest.json` (release bundle manifest)
 
-Schemas live in `policy-llm-lab/contracts/` (and are mirrored in `contracts/` for ops validation).
-
-Release bundle layout (`policy-llm-lab/release/`):
-```
-release/
-  manifest.json
-  model/
-    model.gguf
-    model_card.json
-    eval_report.json
-  index/
-    index.sqlite
-```
+Schemas live in `contracts/` and are validated during release and by `policy-llm-ops` at startup.
 
 ## Observability
 - Traces: Jaeger at `http://localhost:16686`
