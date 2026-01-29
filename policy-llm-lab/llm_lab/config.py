@@ -10,4 +10,5 @@ MODEL_DIR = ARTIFACTS_DIR / "model"
 CONTRACTS_DIR = ROOT / "contracts"
 RELEASE_DIR = ROOT / "release"
 
-INDEX_PATH = ARTIFACTS_DIR / "index.sqlite"
+INDEX_PATH = INDEX_DIR / "bm25.pkl"
+DOCS_PATH = INDEX_DIR / "docs.json"

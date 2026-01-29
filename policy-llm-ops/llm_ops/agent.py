@@ -6,8 +6,7 @@ from typing import Any
 from llm_ops.config import settings
 from llm_ops.graph import build_graph
 from llm_ops.model import LlamaCppClient, MockModelClient, ModelClient
-from llm_ops.retrieval_tool import RetrievalToolFactory, RetrievalToolProtocol
-from llm_ops.tools import PolicyTool, QuoteTool
+from llm_ops.tools import PolicyTool, QuoteTool, RetrievalTool
 
 
 @dataclass
@@ -24,14 +23,12 @@ class AgentResponse:
 class LangGraphAgent:
     def __init__(
         self,
-        retrieval: RetrievalToolProtocol | None = None,
+        retrieval: RetrievalTool | None = None,
         model: ModelClient | None = None,
         policy: PolicyTool | None = None,
         quote: QuoteTool | None = None,
     ) -> None:
-        if retrieval is None:
-            retrieval = RetrievalToolFactory().create()
-        self.retrieval = retrieval
+        self.retrieval = retrieval or RetrievalTool()
         if model is not None:
             self.model = model
         elif settings.llm_provider == "mock":

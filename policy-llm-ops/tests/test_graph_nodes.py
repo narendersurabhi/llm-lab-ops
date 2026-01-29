@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from llm_ops.graph import cite_check_node, precheck_node
-from llm_ops.tools import RetrievalResult
+from llm_ops.tools import Citation, RetrievalResult
 from llm_ops.graph import make_anti_injection_node
 from llm_ops.tools import PolicyTool
 
@@ -20,9 +20,9 @@ def test_anti_injection_blocks_prompt() -> None:
 
 def test_citation_coverage_ratio() -> None:
     contexts = [
-        RetrievalResult(doc_id="a", source="s1", text="alpha beta gamma", score=1.0),
-        RetrievalResult(doc_id="b", source="s2", text="delta epsilon", score=1.0),
+        RetrievalResult(doc_id="a", source="s1", text="t1", score=1.0),
+        RetrievalResult(doc_id="b", source="s2", text="t2", score=1.0),
     ]
-    response_text = "Alpha beta are here. Totally unrelated."
-    update = cite_check_node({"contexts": contexts, "response_text": response_text})
+    citations = [Citation(doc_id="a", source="s1", snippet="t1")]
+    update = cite_check_node({"contexts": contexts, "citations": citations})
     assert update.get("citation_coverage") == 0.5
