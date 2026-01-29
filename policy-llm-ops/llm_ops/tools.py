@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+import time
 from typing import Iterable
 
 import httpx
 from opentelemetry import trace
 
 from llm_ops.config import settings
-from llm_ops.metrics import TOOL_CALLS_SUCCESS, TOOL_CALLS_TOTAL, ROLLING
+from llm_ops.metrics import RETRIEVAL_LATENCY_MS, TOOL_CALLS_SUCCESS, TOOL_CALLS_TOTAL, ROLLING
 
 
 @dataclass(frozen=True)
@@ -17,6 +18,7 @@ class RetrievalResult:
     source: str
     text: str
     score: float
+    chunk_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,7 @@ class RetrievalTool:
 
     async def run(self, query: str, top_k: int = 3) -> list[RetrievalResult]:
         TOOL_CALLS_TOTAL.labels(tool="retrieval").inc()
+        start = time.perf_counter()
         with self._tracer.start_as_current_span("retrieval_tool"):
             try:
                 resp = await self._client.post("/retrieve", json={"query": query, "top_k": top_k})
@@ -53,6 +56,7 @@ class RetrievalTool:
                         source=item.get("source", ""),
                         text=item.get("text", ""),
                         score=float(item.get("score", 0.0)),
+                        chunk_id=item.get("chunk_id"),
                     )
                     for item in data.get("results", [])
                 ]
@@ -64,6 +68,9 @@ class RetrievalTool:
                 ROLLING.record_tool_call(success=False)
                 ROLLING.record_retrieval_hit(False)
                 raise
+            finally:
+                elapsed_ms = (time.perf_counter() - start) * 1000
+                RETRIEVAL_LATENCY_MS.observe(elapsed_ms)
 
     async def close(self) -> None:
         await self._client.aclose()
