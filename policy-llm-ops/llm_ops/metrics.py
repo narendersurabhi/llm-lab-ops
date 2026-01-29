@@ -30,11 +30,6 @@ TOKENS_OUT = Counter(
     "tokens_out",
     "Approximate output tokens",
 )
-RETRIEVAL_LATENCY_MS = Histogram(
-    "retrieval_latency_ms",
-    "Retrieval tool latency in milliseconds",
-    buckets=(5, 10, 25, 50, 100, 200, 400, 800),
-)
 TOOL_CALLS_TOTAL = Counter(
     "tool_calls_total",
     "Total tool calls",

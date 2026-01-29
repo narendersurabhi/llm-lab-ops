@@ -63,8 +63,21 @@ Artifacts emitted by `policy-llm-lab`:
 - `model.gguf` (placeholder if not present)
 - `model_card.json`
 - `eval_report.json`
+- `manifest.json` (release bundle manifest)
 
-Schemas live in `contracts/` and are validated during release and by `policy-llm-ops` at startup.
+Schemas live in `policy-llm-lab/contracts/` (and are mirrored in `contracts/` for ops validation).
+
+Release bundle layout (`policy-llm-lab/release/`):
+```
+release/
+  manifest.json
+  model/
+    model.gguf
+    model_card.json
+    eval_report.json
+  index/
+    index.sqlite
+```
 
 ## Observability
 - Traces: Jaeger at `http://localhost:16686`
@@ -87,7 +100,6 @@ Metrics exposed by gateway:
 make release   # generate eval + model card artifacts
 make test      # lint, typecheck, unit + integration tests
 make lint      # lint only
-make index     # build SQLite FTS5 index at policy-llm-lab/artifacts/index.sqlite
 make loadtest  # basic load test against gateway
 make kind-up   # kind cluster + helm install
 ```

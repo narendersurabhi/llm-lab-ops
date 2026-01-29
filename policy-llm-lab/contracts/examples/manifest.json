@@ -1,0 +1,22 @@
+{
+  "bundle_version": "0.1.0",
+  "created_at": "2026-01-29T00:00:00Z",
+  "git_sha": "unknown",
+  "artifacts": {
+    "model": {
+      "model_card": "model/model_card.json",
+      "eval_report": "model/eval_report.json",
+      "model_gguf": "model/model.gguf"
+    },
+    "index": {
+      "index_sqlite": "index/index.sqlite"
+    }
+  },
+  "fingerprints": {
+    "model/model_card.json": "sha256:pending",
+    "model/eval_report.json": "sha256:pending",
+    "model/model.gguf": "sha256:pending",
+    "index/index.sqlite": "sha256:pending"
+  },
+  "notes": "Example release manifest."
+}
