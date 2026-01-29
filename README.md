@@ -71,6 +71,10 @@ Release bundle layout (`policy-llm-lab/release/`):
 ```
 release/
   manifest.json
+  sbom.json
+  checksums.json
+  attestation.json
+  CHANGELOG.md
   model/
     model.gguf
     model_card.json

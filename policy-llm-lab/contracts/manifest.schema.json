@@ -10,7 +10,7 @@
     "git_sha": {"type": "string"},
     "artifacts": {
       "type": "object",
-      "required": ["model", "index"],
+      "required": ["model", "index", "sbom", "checksums", "attestation", "changelog"],
       "properties": {
         "model": {
           "type": "object",
@@ -27,6 +27,38 @@
           "required": ["index_sqlite"],
           "properties": {
             "index_sqlite": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "sbom": {
+          "type": "object",
+          "required": ["sbom_json"],
+          "properties": {
+            "sbom_json": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "checksums": {
+          "type": "object",
+          "required": ["checksums_json"],
+          "properties": {
+            "checksums_json": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "attestation": {
+          "type": "object",
+          "required": ["attestation_json"],
+          "properties": {
+            "attestation_json": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "changelog": {
+          "type": "object",
+          "required": ["changelog_md"],
+          "properties": {
+            "changelog_md": {"type": "string"}
           },
           "additionalProperties": false
         }
