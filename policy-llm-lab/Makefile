@@ -1,6 +1,11 @@
 .PHONY: test unit component contract lint typecheck index eval release ingest
 
+VENV_PYTHON := ../.venv/bin/python
+ifneq ("$(wildcard $(VENV_PYTHON))","")
+PYTHON ?= $(VENV_PYTHON)
+else
 PYTHON ?= python3
+endif
 PYTEST ?= $(PYTHON) -m pytest
 RELEASE_ID ?= local-dev
 RELEASE_DIR ?= dist/$(RELEASE_ID)

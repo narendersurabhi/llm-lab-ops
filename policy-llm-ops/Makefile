@@ -1,6 +1,11 @@
 .PHONY: test test-integration e2e contract-test up down lint typecheck
 
+VENV_PYTHON := ../.venv/bin/python
+ifneq ("$(wildcard $(VENV_PYTHON))","")
+PYTHON ?= $(VENV_PYTHON)
+else
 PYTHON ?= python3
+endif
 PYTEST ?= $(PYTHON) -m pytest
 COMPOSE ?= docker compose
 COMPOSE_FILE ?= ../docker-compose.yml

@@ -1,6 +1,11 @@
 .PHONY: up test lint typecheck kind-up loadtest release index ingest eval contract-all test-integration e2e uv-venv uv-install deps
 
+VENV_PYTHON := .venv/bin/python
+ifneq ("$(wildcard $(VENV_PYTHON))","")
+PYTHON ?= $(VENV_PYTHON)
+else
 PYTHON ?= python3
+endif
 UV ?= uv
 UV_PYTHON ?= 3.11
 UV_RUN = $(UV) run --python $(UV_PYTHON)
