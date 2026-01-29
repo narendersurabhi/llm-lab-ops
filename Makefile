@@ -1,4 +1,4 @@
-.PHONY: up test lint kind-up loadtest release
+.PHONY: up test lint kind-up loadtest release index
 
 up:
 	docker compose up --build
@@ -28,3 +28,6 @@ loadtest:
 
 release:
 	cd policy-llm-lab && python -m llm_lab.release
+
+index:
+	cd policy-llm-lab && python -m llm_lab.indexer
