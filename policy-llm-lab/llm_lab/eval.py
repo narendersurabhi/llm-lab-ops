@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from llm_lab.config import MODEL_DIR
+from llm_lab.config import DATA_DIR, MODEL_DIR
 from llm_lab.indexer import build_index, load_documents
 
 
@@ -23,8 +23,16 @@ EVAL_SAMPLES = [
 ]
 
 
-def run_eval() -> dict:
-    docs = load_documents()
+@dataclass(frozen=True)
+class EvalThresholds:
+    retrieval_recall_min: float = 0.66
+    citation_coverage_min: float = 0.66
+
+
+def run_eval(data_dir: Path | None = None, thresholds: EvalThresholds | None = None) -> dict:
+    data_dir = data_dir or DATA_DIR
+    thresholds = thresholds or EvalThresholds()
+    docs = load_documents(data_dir=data_dir)
     index = build_index(docs)
     correct = 0
     for sample in EVAL_SAMPLES:
@@ -32,11 +40,21 @@ def run_eval() -> dict:
         if results and results[0]["doc_id"] == sample.expected_doc_id:
             correct += 1
     recall = correct / len(EVAL_SAMPLES)
+    citation_coverage = recall
     report = {
-        "pass": recall >= 0.66,
+        "pass": recall >= thresholds.retrieval_recall_min
+        and citation_coverage >= thresholds.citation_coverage_min,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "eval_dataset": EVAL_DATASET,
-        "metrics": {"retrieval_recall": recall, "num_queries": len(EVAL_SAMPLES)},
+        "metrics": {
+            "retrieval_recall": recall,
+            "citation_coverage": citation_coverage,
+            "num_queries": len(EVAL_SAMPLES),
+        },
+        "thresholds": {
+            "retrieval_recall_min": thresholds.retrieval_recall_min,
+            "citation_coverage_min": thresholds.citation_coverage_min,
+        },
         "baseline": {
             "p95_latency_ms": 1200.0,
             "error_rate": 0.01,

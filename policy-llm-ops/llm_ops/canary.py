@@ -19,6 +19,7 @@ class CanaryConfig:
     baseline_p95_ms: float
     baseline_error_rate: float
     baseline_tool_success: float
+    min_citation_coverage: float
 
 
 @dataclass
@@ -42,18 +43,22 @@ class CanaryController:
     def _load_eval(self, model_dir: Path) -> CanaryConfig:
         path = model_dir / "eval_report.json"
         if not path.exists():
-            return CanaryConfig(False, 1200.0, 0.01, 0.98)
+            return CanaryConfig(False, 1200.0, 0.01, 0.98, settings.citation_min_coverage)
         data = json.loads(path.read_text(encoding="utf-8"))
         schema_path = CONTRACTS_DIR / "eval_report.schema.json"
         if schema_path.exists():
             schema = json.loads(schema_path.read_text(encoding="utf-8"))
             validate(instance=data, schema=schema)
         baseline = data.get("baseline", {})
+        thresholds = data.get("thresholds", {})
         return CanaryConfig(
             pass_eval=bool(data.get("pass")),
             baseline_p95_ms=float(baseline.get("p95_latency_ms", 1200.0)),
             baseline_error_rate=float(baseline.get("error_rate", 0.01)),
             baseline_tool_success=float(baseline.get("tool_success_rate", 0.98)),
+            min_citation_coverage=float(
+                thresholds.get("citation_coverage_min", settings.citation_min_coverage)
+            ),
         )
 
     def choose_variant(self) -> str:
@@ -81,7 +86,7 @@ class CanaryController:
         regression = p95 > self.config.baseline_p95_ms * 1.2
         error_bad = error_rate > 0.02
         tool_bad = tool_success_rate < 0.95
-        cite_bad = citation_coverage < settings.citation_min_coverage
+        cite_bad = citation_coverage < self.config.min_citation_coverage
 
         if regression or error_bad or tool_bad or cite_bad:
             self.state.fraction = 0.0
