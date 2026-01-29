@@ -13,6 +13,8 @@ class Settings:
         self.model_dir = Path(os.getenv("MODEL_DIR", "/models"))
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
         self.prompt_sample_rate = float(os.getenv("PROMPT_SAMPLE_RATE", "0.0"))
+        self.retrieval_mode = os.getenv("RETRIEVAL_MODE", "http")
+        self.retrieval_db_path = os.getenv("RETRIEVAL_DB_PATH")
         self.canary_enabled = os.getenv("CANARY_ENABLED", "true").lower() == "true"
         self.canary_fraction = float(os.getenv("CANARY_FRACTION", "0.05"))
         self.canary_min_samples = int(os.getenv("CANARY_MIN_SAMPLES", "30"))

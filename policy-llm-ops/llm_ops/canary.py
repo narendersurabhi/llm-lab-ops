@@ -19,6 +19,10 @@ class CanaryConfig:
     baseline_p95_ms: float
     baseline_error_rate: float
     baseline_tool_success: float
+    min_citation_coverage: float
+    max_error_rate: float
+    max_p95_regression: float
+    min_tool_success: float
 
 
 @dataclass
@@ -42,18 +46,34 @@ class CanaryController:
     def _load_eval(self, model_dir: Path) -> CanaryConfig:
         path = model_dir / "eval_report.json"
         if not path.exists():
-            return CanaryConfig(False, 1200.0, 0.01, 0.98)
+            return CanaryConfig(
+                False,
+                1200.0,
+                0.01,
+                0.98,
+                settings.citation_min_coverage,
+                0.02,
+                0.2,
+                0.95,
+            )
         data = json.loads(path.read_text(encoding="utf-8"))
         schema_path = CONTRACTS_DIR / "eval_report.schema.json"
         if schema_path.exists():
             schema = json.loads(schema_path.read_text(encoding="utf-8"))
             validate(instance=data, schema=schema)
         baseline = data.get("baseline", {})
+        thresholds = data.get("thresholds", {})
         return CanaryConfig(
             pass_eval=bool(data.get("pass")),
             baseline_p95_ms=float(baseline.get("p95_latency_ms", 1200.0)),
             baseline_error_rate=float(baseline.get("error_rate", 0.01)),
             baseline_tool_success=float(baseline.get("tool_success_rate", 0.98)),
+            min_citation_coverage=float(
+                thresholds.get("citation_coverage_min", settings.citation_min_coverage)
+            ),
+            max_error_rate=float(thresholds.get("runtime_error_rate_max", 0.02)),
+            max_p95_regression=float(thresholds.get("runtime_p95_regression_max", 0.2)),
+            min_tool_success=float(thresholds.get("runtime_tool_success_min", 0.95)),
         )
 
     def choose_variant(self) -> str:
@@ -78,10 +98,10 @@ class CanaryController:
         tool_success_rate = sum(self.tool_success) / len(self.tool_success)
         citation_coverage = sum(self.citation_coverage) / len(self.citation_coverage)
 
-        regression = p95 > self.config.baseline_p95_ms * 1.2
-        error_bad = error_rate > 0.02
-        tool_bad = tool_success_rate < 0.95
-        cite_bad = citation_coverage < settings.citation_min_coverage
+        regression = p95 > self.config.baseline_p95_ms * (1 + self.config.max_p95_regression)
+        error_bad = error_rate > self.config.max_error_rate
+        tool_bad = tool_success_rate < self.config.min_tool_success
+        cite_bad = citation_coverage < self.config.min_citation_coverage
 
         if regression or error_bad or tool_bad or cite_bad:
             self.state.fraction = 0.0
