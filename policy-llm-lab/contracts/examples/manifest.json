@@ -10,13 +10,27 @@
     },
     "index": {
       "index_sqlite": "index/index.sqlite"
+    },
+    "sbom": {
+      "sbom_json": "sbom.json"
+    },
+    "checksums": {
+      "checksums_json": "checksums.json"
+    },
+    "attestation": {
+      "attestation_json": "attestation.json"
+    },
+    "changelog": {
+      "changelog_md": "CHANGELOG.md"
     }
   },
   "fingerprints": {
     "model/model_card.json": "sha256:pending",
     "model/eval_report.json": "sha256:pending",
     "model/model.gguf": "sha256:pending",
-    "index/index.sqlite": "sha256:pending"
+    "index/index.sqlite": "sha256:pending",
+    "sbom.json": "sha256:pending",
+    "CHANGELOG.md": "sha256:pending"
   },
   "notes": "Example release manifest."
 }

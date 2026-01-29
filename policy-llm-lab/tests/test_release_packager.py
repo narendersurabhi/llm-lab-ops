@@ -37,10 +37,29 @@ def test_release_bundle_layout(tmp_path: Path) -> None:
         contracts_dir=CONTRACTS_DIR,
     )
 
-    assert (output_dir / RELEASE_LAYOUT["manifest"]).exists()
+    manifest_path = output_dir / RELEASE_LAYOUT["manifest"]
+    assert manifest_path.exists()
 
     for name in RELEASE_LAYOUT["model"]:
         assert (output_dir / "model" / name).exists()
 
     for name in RELEASE_LAYOUT["index"]:
         assert (output_dir / "index" / name).exists()
+
+    sbom_path = output_dir / RELEASE_LAYOUT["sbom"]
+    checksums_path = output_dir / RELEASE_LAYOUT["checksums"]
+    attestation_path = output_dir / RELEASE_LAYOUT["attestation"]
+    changelog_path = output_dir / RELEASE_LAYOUT["changelog"]
+
+    assert sbom_path.exists()
+    assert checksums_path.exists()
+    assert attestation_path.exists()
+    assert changelog_path.exists()
+
+    checksums = _load_json(checksums_path)
+    assert RELEASE_LAYOUT["manifest"] in checksums
+    assert RELEASE_LAYOUT["sbom"] in checksums
+
+    attestation = _load_json(attestation_path)
+    assert attestation.get("manifest_sha256")
+    assert attestation.get("checksums_sha256")
