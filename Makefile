@@ -1,4 +1,4 @@
-.PHONY: up test test-uv uv-test lint lint-uv kind-up loadtest release index uv-venv uv-install
+.PHONY: up test test-uv uv-test lint lint-uv kind-up loadtest release index ingest eval uv-venv uv-install
 
 PYTHON ?= python3
 UV ?= uv
@@ -46,10 +46,16 @@ loadtest:
 	$(PYTHON) scripts/loadtest.py
 
 release:
-	cd policy-llm-lab && $(PYTHON) -m llm_lab.release
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.release.packager
 
 index:
 	cd policy-llm-lab && $(PYTHON) -m llm_lab.indexer
+
+ingest:
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.ingest
+
+eval:
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.eval
 
 uv-venv:
 	$(UV) venv

@@ -7,6 +7,7 @@ DATA_DIR = ROOT / "data" / "sample_docs"
 ARTIFACTS_DIR = ROOT / "artifacts"
 INDEX_DIR = ARTIFACTS_DIR / "index"
 MODEL_DIR = ARTIFACTS_DIR / "model"
-CONTRACTS_DIR = ROOT.parent / "contracts"
+CONTRACTS_DIR = ROOT / "contracts"
+RELEASE_DIR = ROOT / "release"
 
 INDEX_PATH = ARTIFACTS_DIR / "index.sqlite"
