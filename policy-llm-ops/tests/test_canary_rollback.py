@@ -15,12 +15,18 @@ def _write_eval_report(path: Path, citation_threshold: float = 0.9) -> None:
         "eval_dataset": "test",
         "metrics": {
             "retrieval_recall": 1.0,
+            "retrieval_hit_rate": 1.0,
+            "recall_at_5": 1.0,
             "citation_coverage": 1.0,
             "num_queries": 1,
         },
         "thresholds": {
-            "retrieval_recall_min": 0.5,
+            "retrieval_hit_rate_min": 0.5,
+            "recall_at_5_min": 0.5,
             "citation_coverage_min": citation_threshold,
+            "runtime_error_rate_max": 0.02,
+            "runtime_p95_regression_max": 0.2,
+            "runtime_tool_success_min": 0.95,
         },
         "baseline": {
             "p95_latency_ms": 100.0,

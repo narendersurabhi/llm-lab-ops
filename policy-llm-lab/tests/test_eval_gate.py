@@ -16,7 +16,11 @@ def test_citation_coverage_gate_fails_when_docs_removed(tmp_path: Path) -> None:
         if path.is_file():
             shutil.copy(path, data_dir / path.name)
 
-    thresholds = EvalThresholds(retrieval_recall_min=1.0, citation_coverage_min=1.0)
+    thresholds = EvalThresholds(
+        retrieval_hit_rate_min=1.0,
+        recall_at_5_min=1.0,
+        citation_coverage_min=1.0,
+    )
     report = run_eval(data_dir=data_dir, thresholds=thresholds)
 
     assert report["metrics"]["citation_coverage"] < thresholds.citation_coverage_min
