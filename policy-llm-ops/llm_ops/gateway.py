@@ -33,21 +33,25 @@ app = FastAPI(title="Policy LLM Ops Gateway", version="0.1.0")
 instrument_app(app)
 
 agent = LangGraphAgent()
+canary_agent = LangGraphAgent() if settings.canary_enabled else None
 canary = CanaryController(settings.model_dir) if settings.canary_enabled else None
 tracer = trace.get_tracer(__name__)
 
 
 @app.on_event("shutdown")
 async def shutdown() -> None:
-    try:
-        await agent.retrieval.close()
-    except Exception:  # noqa: BLE001
-        pass
-    if hasattr(agent.model, "close"):
+    for active_agent in [agent, canary_agent]:
+        if active_agent is None:
+            continue
         try:
-            await agent.model.close()  # type: ignore[attr-defined]
+            await active_agent.retrieval.close()
         except Exception:  # noqa: BLE001
             pass
+        if hasattr(active_agent.model, "close"):
+            try:
+                await active_agent.model.close()  # type: ignore[attr-defined]
+            except Exception:  # noqa: BLE001
+                pass
 
 
 class ChatMessage(BaseModel):
@@ -111,16 +115,18 @@ async def metrics() -> Response:
 
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse)
-async def chat_completions(req: ChatCompletionRequest) -> ChatCompletionResponse:
+async def chat_completions(req: ChatCompletionRequest, response: Response) -> ChatCompletionResponse:
     req_id = request_id_var.get() or str(uuid.uuid4())
     start = time.perf_counter()
     variant = canary.choose_variant() if canary else "stable"
+    active_agent = canary_agent if variant == "canary" and canary_agent else agent
+    response.headers["x-llm-variant"] = variant
     if should_sample_prompt():
         log_event(logger, "prompt_sample", messages=[m.model_dump() for m in req.messages])
 
     with tracer.start_as_current_span("langgraph_run"):
         try:
-            response = await agent.run([m.model_dump() for m in req.messages])
+            response = await active_agent.run([m.model_dump() for m in req.messages])
         except Exception as exc:  # noqa: BLE001
             if canary:
                 canary.record(
