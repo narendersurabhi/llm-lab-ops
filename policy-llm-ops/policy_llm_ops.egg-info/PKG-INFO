@@ -1,0 +1,28 @@
+Metadata-Version: 2.4
+Name: policy-llm-ops
+Version: 0.1.0
+Summary: LLM ops gateway and agent runtime
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.109
+Requires-Dist: uvicorn>=0.23
+Requires-Dist: pydantic>=2.5
+Requires-Dist: httpx>=0.26
+Requires-Dist: langgraph>=0.0.40
+Requires-Dist: prometheus_client>=0.18
+Requires-Dist: opentelemetry-api>=1.21
+Requires-Dist: opentelemetry-sdk>=1.21
+Requires-Dist: opentelemetry-exporter-otlp>=1.21
+Requires-Dist: opentelemetry-instrumentation-fastapi>=0.44b0
+Requires-Dist: opentelemetry-instrumentation-httpx>=0.44b0
+Requires-Dist: jsonschema>=4.20
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.23; extra == "dev"
+Requires-Dist: httpx>=0.26; extra == "dev"
+Requires-Dist: ruff>=0.1; extra == "dev"
+Requires-Dist: mypy>=1.7; extra == "dev"
+
+# policy-llm-ops
+
+OpenAI-compatible gateway, LangGraph agent runtime, observability, and canary/rollback logic.

@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from llm_lab.config import MODEL_DIR
-from llm_lab.indexer import build_index, load_documents
+from llm_lab.config import DATA_DIR, INDEX_PATH, MODEL_DIR
+from llm_lab.indexer import build_index
 
 
 @dataclass(frozen=True)
@@ -23,14 +23,14 @@ EVAL_SAMPLES = [
 ]
 
 
-def run_eval() -> dict:
-    docs = load_documents()
-    index = build_index(docs)
+def run_eval(data_dir: Path = DATA_DIR, index_path: Path = INDEX_PATH) -> dict:
+    index = build_index(data_dir=data_dir, index_path=index_path)
     correct = 0
     for sample in EVAL_SAMPLES:
         results = index.retrieve(sample.query, top_k=1)
         if results and results[0]["doc_id"] == sample.expected_doc_id:
             correct += 1
+    index.close()
     recall = correct / len(EVAL_SAMPLES)
     report = {
         "pass": recall >= 0.66,
@@ -47,8 +47,10 @@ def run_eval() -> dict:
     return report
 
 
-def write_eval_report(path: Path) -> dict:
-    report = run_eval()
+def write_eval_report(
+    path: Path, data_dir: Path = DATA_DIR, index_path: Path = INDEX_PATH
+) -> dict:
+    report = run_eval(data_dir=data_dir, index_path=index_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report
