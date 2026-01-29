@@ -1,36 +1,52 @@
 {
+  "release_id": "dev-abcdef1",
   "bundle_version": "0.1.0",
   "created_at": "2026-01-29T00:00:00Z",
-  "git_sha": "unknown",
+  "git_sha": "abcdef1234567890abcdef1234567890abcdef12",
   "artifacts": {
     "model": {
       "model_card": "model/model_card.json",
-      "eval_report": "model/eval_report.json",
       "model_gguf": "model/model.gguf"
     },
     "index": {
       "index_sqlite": "index/index.sqlite"
     },
-    "sbom": {
-      "sbom_json": "sbom.json"
+    "eval": {
+      "eval_report": "eval/eval_report.json"
     },
-    "checksums": {
-      "checksums_json": "checksums.json"
+    "contracts": {
+      "manifest_schema": "contracts/manifest.schema.json",
+      "model_card_schema": "contracts/model_card.schema.json",
+      "eval_report_schema": "contracts/eval_report.schema.json"
     },
-    "attestation": {
-      "attestation_json": "attestation.json"
-    },
-    "changelog": {
-      "changelog_md": "CHANGELOG.md"
+    "meta": {
+      "sbom": {"sbom_json": "meta/sbom.json"},
+      "checksums": {"checksums_json": "meta/checksums.json"},
+      "attestation": {"attestation_json": "meta/attestation.json"},
+      "changelog": {"changelog_md": "meta/CHANGELOG.md"}
     }
   },
   "fingerprints": {
-    "model/model_card.json": "sha256:pending",
-    "model/eval_report.json": "sha256:pending",
-    "model/model.gguf": "sha256:pending",
-    "index/index.sqlite": "sha256:pending",
-    "sbom.json": "sha256:pending",
-    "CHANGELOG.md": "sha256:pending"
+    "dataset": {
+      "algo": "sha256",
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "index": {
+      "algo": "sha256",
+      "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "model": {
+      "algo": "sha256",
+      "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "bundle": {
+      "algo": "sha256",
+      "value": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "eval": {
+      "algo": "sha256",
+      "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    }
   },
   "notes": "Example release manifest."
 }

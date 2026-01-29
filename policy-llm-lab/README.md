@@ -6,16 +6,22 @@ Data → indexing → eval → release artifacts for the LLMOps pipeline.
 ```
 release/
   manifest.json
-  sbom.json
-  checksums.json
-  attestation.json
-  CHANGELOG.md
   model/
-    model.gguf
     model_card.json
-    eval_report.json
+    model.gguf
   index/
     index.sqlite
+  eval/
+    eval_report.json
+  contracts/
+    manifest.schema.json
+    model_card.schema.json
+    eval_report.schema.json
+  meta/
+    sbom.json
+    checksums.json
+    attestation.json
+    CHANGELOG.md
 ```
 
 Schemas for `manifest.json`, `model_card.json`, and `eval_report.json` live in `contracts/`.
