@@ -64,7 +64,7 @@ def format_citations(citations: list[Citation]) -> str:
     return "\n".join(lines)
 
 
-SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\\s+|\\n+")
+SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
 TOKEN_RE = re.compile(r"[A-Za-z0-9']+")
 
 

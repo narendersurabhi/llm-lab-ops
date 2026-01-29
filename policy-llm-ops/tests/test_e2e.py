@@ -26,6 +26,11 @@ def test_canary_rolls_back_with_regression(tmp_path: Path, monkeypatch) -> None:
     import llm_ops.config as config
 
     importlib.reload(config)
+    import llm_ops.canary as canary
+    import llm_ops.release_manager as release_manager
+
+    importlib.reload(canary)
+    importlib.reload(release_manager)
     import llm_ops.gateway as gateway
 
     importlib.reload(gateway)

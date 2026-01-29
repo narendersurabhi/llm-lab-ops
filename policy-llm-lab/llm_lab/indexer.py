@@ -10,6 +10,7 @@ from pathlib import Path
 from llm_lab.config import DATA_DIR, INDEX_META_PATH, INDEX_PATH
 
 WORD_PATTERN = re.compile(r"\S+")
+QUERY_TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
 CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`([^`]+)`")
 LINK_RE = re.compile(r"\[([^\]]+)\]\([^\)]+\)")
@@ -17,6 +18,40 @@ IMAGE_RE = re.compile(r"!\[([^\]]*)\]\([^\)]+\)")
 HEADER_RE = re.compile(r"^#{1,6}\s+", re.MULTILINE)
 BLOCKQUOTE_RE = re.compile(r"^>\s+", re.MULTILINE)
 BULLET_RE = re.compile(r"^[*-]\s+", re.MULTILINE)
+STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "do",
+    "does",
+    "did",
+    "for",
+    "from",
+    "how",
+    "in",
+    "is",
+    "it",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "to",
+    "was",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "why",
+    "with",
+}
 
 
 @dataclass(frozen=True)
@@ -59,6 +94,9 @@ class SQLiteIndex:
         self.conn.row_factory = sqlite3.Row
 
     def retrieve(self, query: str, top_k: int = 3) -> list[dict]:
+        query_text = _sanitize_query(query)
+        if not query_text:
+            return []
         cursor = self.conn.execute(
             """
             SELECT c.chunk_id, c.doc_id, d.source, c.content as text, bm25(chunks_fts) as score
@@ -69,7 +107,7 @@ class SQLiteIndex:
             ORDER BY score ASC, c.chunk_id ASC
             LIMIT ?
             """,
-            (query, top_k),
+            (query_text, top_k),
         )
         rows = cursor.fetchall()
         return [
@@ -94,6 +132,9 @@ class RetrievalClient:
         self._conn.row_factory = sqlite3.Row
 
     def retrieve(self, query: str, top_k: int = 3) -> list[dict]:
+        query_text = _sanitize_query(query)
+        if not query_text:
+            return []
         cursor = self._conn.execute(
             """
             SELECT c.chunk_id, c.doc_id, d.source, c.content as text, bm25(chunks_fts) as score
@@ -104,7 +145,7 @@ class RetrievalClient:
             ORDER BY score ASC, c.chunk_id ASC
             LIMIT ?
             """,
-            (query, top_k),
+            (query_text, top_k),
         )
         rows = cursor.fetchall()
         return [
@@ -278,6 +319,19 @@ class IndexBuilder:
         )
         self.meta_path.write_text(json.dumps(meta.to_dict(), indent=2), encoding="utf-8")
         return self.index_path
+
+
+def _sanitize_query(query: str) -> str:
+    tokens = [
+        token
+        for token in QUERY_TOKEN_RE.findall(query.lower())
+        if token not in STOPWORDS
+    ]
+    if not tokens:
+        return ""
+    if len(tokens) == 1:
+        return tokens[0]
+    return " OR ".join(tokens)
 
 
 def load_index(index_path: Path = INDEX_PATH) -> SQLiteIndex:

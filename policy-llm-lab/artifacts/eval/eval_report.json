@@ -1,0 +1,64 @@
+{
+  "release_id": "local-dev",
+  "baseline_release_id": "local-dev",
+  "created_at": "2026-01-29T20:29:10.223829+00:00",
+  "eval_dataset": "sample_docs_v1",
+  "pass": true,
+  "metrics": {
+    "latency_p50_ms": 650.0,
+    "latency_p95_ms": 1400.0,
+    "ttft_ms": 280.0,
+    "tokens_per_second": 18.5,
+    "error_rate": 0.0,
+    "tool_call_success_rate": 1.0,
+    "retrieval_hit_rate": 1.0,
+    "citation_coverage": 1.0,
+    "retrieval_recall": 1.0,
+    "recall_at_5": 1.0
+  },
+  "thresholds": {
+    "latency_p50_ms": {
+      "max": 1200.0
+    },
+    "latency_p95_ms": {
+      "max": 2500.0
+    },
+    "ttft_ms": {
+      "max": 800.0
+    },
+    "tokens_per_second": {
+      "min": 10.0
+    },
+    "error_rate": {
+      "max": 0.02
+    },
+    "tool_call_success_rate": {
+      "min": 0.95
+    },
+    "retrieval_hit_rate": {
+      "min": 0.98
+    },
+    "citation_coverage": {
+      "min": 0.75
+    },
+    "retrieval_recall": {
+      "min": 0.85
+    },
+    "recall_at_5": {
+      "min": 0.85
+    }
+  },
+  "regressions": {
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "ttft_ms": null,
+    "tokens_per_second": null,
+    "error_rate": null,
+    "tool_call_success_rate": null,
+    "retrieval_hit_rate": null,
+    "citation_coverage": null,
+    "retrieval_recall": null,
+    "recall_at_5": null
+  },
+  "notes": "Runtime metrics are placeholders for local evaluation."
+}

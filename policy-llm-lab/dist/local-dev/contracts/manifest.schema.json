@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/release_manifest.schema.json",
+  "title": "ReleaseManifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "release_id",
+    "bundle_version",
+    "created_at",
+    "git_sha",
+    "artifacts",
+    "fingerprints"
+  ],
+  "$defs": {
+    "git_sha": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "release_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"
+    },
+    "path_model": {"type": "string", "pattern": "^model/[^\\s]+$"},
+    "path_index": {"type": "string", "pattern": "^index/[^\\s]+$"},
+    "path_eval": {"type": "string", "pattern": "^eval/[^\\s]+$"},
+    "path_contracts": {"type": "string", "pattern": "^contracts/[^\\s]+$"},
+    "path_meta": {"type": "string", "pattern": "^meta/[^\\s]+$"},
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algo", "value"],
+      "properties": {
+        "algo": {"type": "string", "enum": ["sha256"]},
+        "value": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  },
+  "properties": {
+    "release_id": {"$ref": "#/$defs/release_id"},
+    "bundle_version": {"$ref": "#/$defs/semver"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "git_sha": {"$ref": "#/$defs/git_sha"},
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "index", "eval", "contracts"],
+      "properties": {
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["model_card", "model_gguf"],
+          "properties": {
+            "model_card": {"$ref": "#/$defs/path_model"},
+            "model_gguf": {"$ref": "#/$defs/path_model"},
+            "tokenizer": {"$ref": "#/$defs/path_model"}
+          }
+        },
+        "index": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["index_sqlite"],
+          "properties": {
+            "index_sqlite": {"$ref": "#/$defs/path_index"}
+          }
+        },
+        "eval": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["eval_report"],
+          "properties": {
+            "eval_report": {"$ref": "#/$defs/path_eval"},
+            "metrics_summary": {"$ref": "#/$defs/path_eval"}
+          }
+        },
+        "contracts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["manifest_schema", "model_card_schema", "eval_report_schema"],
+          "properties": {
+            "manifest_schema": {"$ref": "#/$defs/path_contracts"},
+            "model_card_schema": {"$ref": "#/$defs/path_contracts"},
+            "eval_report_schema": {"$ref": "#/$defs/path_contracts"}
+          }
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sbom": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["sbom_json"],
+              "properties": {"sbom_json": {"$ref": "#/$defs/path_meta"}}
+            },
+            "checksums": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["checksums_json"],
+              "properties": {"checksums_json": {"$ref": "#/$defs/path_meta"}}
+            },
+            "attestation": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["attestation_json"],
+              "properties": {"attestation_json": {"$ref": "#/$defs/path_meta"}}
+            },
+            "changelog": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["changelog_md"],
+              "properties": {"changelog_md": {"$ref": "#/$defs/path_meta"}}
+            }
+          }
+        }
+      }
+    },
+    "fingerprints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dataset", "index", "model", "bundle"],
+      "properties": {
+        "dataset": {"$ref": "#/$defs/fingerprint"},
+        "index": {"$ref": "#/$defs/fingerprint"},
+        "model": {"$ref": "#/$defs/fingerprint"},
+        "bundle": {"$ref": "#/$defs/fingerprint"},
+        "eval": {"$ref": "#/$defs/fingerprint"},
+        "sbom": {"$ref": "#/$defs/fingerprint"},
+        "checksums": {"$ref": "#/$defs/fingerprint"},
+        "attestation": {"$ref": "#/$defs/fingerprint"},
+        "changelog": {"$ref": "#/$defs/fingerprint"}
+      }
+    },
+    "notes": {"type": "string"}
+  }
+}

@@ -56,7 +56,7 @@ e2e:
 
 contract-all:
 	$(MAKE) -C policy-llm-lab release RELEASE_ID=local-dev RELEASE_DIR=dist/local-dev
-	RELEASE_PATH=policy-llm-lab/dist/local-dev $(MAKE) -C policy-llm-ops contract-test
+	RELEASE_PATH=$(CURDIR)/policy-llm-lab/dist/local-dev $(MAKE) -C policy-llm-ops contract-test
 
 uv-venv:
 	$(UV) venv

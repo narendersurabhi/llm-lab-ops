@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+
+from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
@@ -13,8 +16,10 @@ from llm_ops.config import settings
 def init_tracing() -> None:
     resource = Resource.create({"service.name": settings.service_name})
     provider = TracerProvider(resource=resource)
-    exporter = OTLPSpanExporter()
-    provider.add_span_processor(BatchSpanProcessor(exporter))
+    endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if endpoint:
+        exporter = OTLPSpanExporter(endpoint=endpoint)
+        provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
     HTTPXClientInstrumentor().instrument()
 

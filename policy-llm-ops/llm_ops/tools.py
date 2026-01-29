@@ -12,6 +12,42 @@ from opentelemetry import trace
 from llm_ops.config import settings
 from llm_ops.metrics import RETRIEVAL_LATENCY_MS, TOOL_CALLS_SUCCESS, TOOL_CALLS_TOTAL, ROLLING
 
+RETRIEVAL_QUERY_RE = re.compile(r"[A-Za-z0-9]+")
+STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "by",
+    "do",
+    "does",
+    "did",
+    "for",
+    "from",
+    "how",
+    "in",
+    "is",
+    "it",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "to",
+    "was",
+    "were",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "why",
+    "with",
+}
+
 
 @dataclass(frozen=True)
 class RetrievalResult:
@@ -46,6 +82,12 @@ class RetrievalTool:
         start = time.perf_counter()
         with self._tracer.start_as_current_span("retrieval_tool"):
             try:
+                query_text = _sanitize_query(query)
+                if not query_text:
+                    ROLLING.record_tool_call(success=True)
+                    ROLLING.record_retrieval_hit(False)
+                    TOOL_CALLS_SUCCESS.labels(tool="retrieval").inc()
+                    return []
                 with sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True) as conn:
                     conn.row_factory = sqlite3.Row
                     cursor = conn.execute(
@@ -59,7 +101,7 @@ class RetrievalTool:
                         ORDER BY score ASC, c.chunk_id ASC
                         LIMIT ?
                         """,
-                        (query, top_k),
+                        (query_text, top_k),
                     )
                     rows = cursor.fetchall()
                 results = [
@@ -85,6 +127,19 @@ class RetrievalTool:
 
     async def close(self) -> None:
         return None
+
+
+def _sanitize_query(query: str) -> str:
+    tokens = [
+        token
+        for token in RETRIEVAL_QUERY_RE.findall(query.lower())
+        if token not in STOPWORDS
+    ]
+    if not tokens:
+        return ""
+    if len(tokens) == 1:
+        return tokens[0]
+    return " OR ".join(tokens)
 
 
 class QuoteTool:

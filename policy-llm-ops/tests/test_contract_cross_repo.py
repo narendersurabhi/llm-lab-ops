@@ -14,11 +14,14 @@ from llm_ops.release_manager import ReleaseManager
 
 @pytest.mark.contract
 def test_ops_consumes_lab_release_bundle(sample_docs: Path, tmp_path: Path, monkeypatch) -> None:
-    contracts_dir = Path(__file__).resolve().parents[2] / "contracts"
+    repo_root = Path(__file__).resolve().parents[2]
+    contracts_dir = repo_root / "contracts"
     release_path_env = os.getenv("RELEASE_PATH")
 
     if release_path_env:
         release_dir = Path(release_path_env)
+        if not release_dir.is_absolute():
+            release_dir = repo_root / release_dir
     else:
         release_id = "contract-bundle"
         release_dir = tmp_path / "dist" / release_id

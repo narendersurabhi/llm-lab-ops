@@ -1,0 +1,12 @@
+{
+  "manifest.json": "f4a1d4bacc69b7be4002c47936b46b0a3a1f27400146e379c55c7c2734e68c56",
+  "meta/sbom.json": "b9bca5ccc0ba201fae449349786879286aebb5cbabcd6664623c4e390bc69303",
+  "meta/CHANGELOG.md": "39734412a843f479efeffb29173c70824ed6e8a853096a1bd63d1f3dcd1d9543",
+  "model/model_card.json": "dac68385d04fbb530990e3d8e8998d51abb2ec18b03c0a3ef25d8ce17237402d",
+  "model/model.gguf": "afb91452ccedce1ed27ddb87f9baa5a501eca17822363c247f7658c80c7171bf",
+  "eval/eval_report.json": "112e532475957d74c4e07343d7fb0c2128f8f37690e0f20c78ad9484167255b4",
+  "index/index.sqlite": "59f7868545ede9d44d500e43fe4f73c08e942900661ef3388f60cf5d5ef8b592",
+  "contracts/manifest.schema.json": "fd97f09e0d368fb68435498457fadacdd7720ff39ac5e73234ffc91f5ef1bb34",
+  "contracts/model_card.schema.json": "2b4212e8928ce3a3f243ce83873180e46b6945b39c65658fec67be698bf4b3ae",
+  "contracts/eval_report.schema.json": "6c6157bf90291f46d26191d9342a6311beb3ce594df2939580ad45c9b6793186"
+}
