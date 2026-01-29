@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Callable, Literal, TypedDict
 
 from langgraph.graph import END, StateGraph
@@ -61,6 +62,31 @@ def format_citations(citations: list[Citation]) -> str:
     for cite in citations:
         lines.append(f"[{cite.doc_id}] {cite.snippet} ({cite.source})")
     return "\n".join(lines)
+
+
+SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
+TOKEN_RE = re.compile(r"[A-Za-z0-9']+")
+
+
+def split_sentences(text: str) -> list[str]:
+    sentences = [s.strip() for s in SENTENCE_SPLIT_RE.split(text) if s.strip()]
+    return sentences
+
+
+def tokenize_text(text: str) -> set[str]:
+    return {match.group(0).lower() for match in TOKEN_RE.finditer(text) if len(match.group(0)) > 2}
+
+
+def sentence_supported(sentence_tokens: set[str], context_tokens: list[set[str]]) -> bool:
+    if not sentence_tokens:
+        return False
+    for ctx_tokens in context_tokens:
+        overlap = sentence_tokens & ctx_tokens
+        if len(overlap) >= 2:
+            return True
+        if overlap and (len(overlap) / len(sentence_tokens)) >= 0.3:
+            return True
+    return False
 
 
 def precheck_node(state: AgentState) -> dict[str, Any]:
@@ -136,9 +162,18 @@ def make_generate_node(model: ModelClient, quote: QuoteTool) -> Callable[[AgentS
 def cite_check_node(state: AgentState) -> dict[str, Any]:
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("node_cite_check"):
+        response_text = state.get("response_text", "")
         contexts = state.get("contexts", [])
-        citations = state.get("citations", [])
-        coverage = (len(citations) / len(contexts)) if contexts else 0.0
+        sentences = split_sentences(response_text)
+        if not contexts or not sentences:
+            return {"citation_coverage": 0.0}
+        context_tokens = [tokenize_text(ctx.text) for ctx in contexts]
+        supported = 0
+        for sentence in sentences:
+            tokens = tokenize_text(sentence)
+            if sentence_supported(tokens, context_tokens):
+                supported += 1
+        coverage = supported / len(sentences) if sentences else 0.0
         return {"citation_coverage": coverage}
 
 
