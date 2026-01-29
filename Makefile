@@ -1,19 +1,38 @@
-.PHONY: up test lint kind-up loadtest release
+.PHONY: up test test-uv uv-test lint lint-uv kind-up loadtest release index uv-venv uv-install
+
+PYTHON ?= python3
+UV ?= uv
+UV_PYTHON ?= 3.11
+UV_RUN = $(UV) run --python $(UV_PYTHON)
 
 up:
 	docker compose up --build
 
 test:
-	cd policy-llm-lab && python -m pytest
-	cd policy-llm-ops && python -m pytest
-	cd policy-llm-lab && python -m ruff check .
-	cd policy-llm-ops && python -m ruff check .
-	cd policy-llm-lab && python -m mypy llm_lab
-	cd policy-llm-ops && python -m mypy llm_ops
+	cd policy-llm-lab && $(PYTHON) -m pytest
+	cd policy-llm-ops && $(PYTHON) -m pytest
+	cd policy-llm-lab && $(PYTHON) -m ruff check .
+	cd policy-llm-ops && $(PYTHON) -m ruff check .
+	cd policy-llm-lab && $(PYTHON) -m mypy llm_lab
+	cd policy-llm-ops && $(PYTHON) -m mypy llm_ops
+
+test-uv:
+	cd policy-llm-lab && $(UV_RUN) -m pytest
+	cd policy-llm-ops && $(UV_RUN) -m pytest
+	cd policy-llm-lab && $(UV_RUN) -m ruff check .
+	cd policy-llm-ops && $(UV_RUN) -m ruff check .
+	cd policy-llm-lab && $(UV_RUN) -m mypy llm_lab
+	cd policy-llm-ops && $(UV_RUN) -m mypy llm_ops
+
+uv-test: uv-install test-uv
 
 lint:
-	cd policy-llm-lab && python -m ruff check .
-	cd policy-llm-ops && python -m ruff check .
+	cd policy-llm-lab && $(PYTHON) -m ruff check .
+	cd policy-llm-ops && $(PYTHON) -m ruff check .
+
+lint-uv:
+	cd policy-llm-lab && $(UV_RUN) -m ruff check .
+	cd policy-llm-ops && $(UV_RUN) -m ruff check .
 
 kind-up:
 	kind create cluster --config infra/kind/kind-config.yaml
@@ -24,7 +43,18 @@ kind-up:
 	helm upgrade --install llm-stack infra/helm/llm-stack
 
 loadtest:
-	python scripts/loadtest.py
+	$(PYTHON) scripts/loadtest.py
 
 release:
-	cd policy-llm-lab && python -m llm_lab.release
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.release
+
+index:
+	cd policy-llm-lab && $(PYTHON) -m llm_lab.indexer
+
+uv-venv:
+	$(UV) venv
+
+uv-install:
+	$(UV) venv
+	$(UV) pip install -e ./policy-llm-lab[dev]
+	$(UV) pip install -e ./policy-llm-ops[dev]

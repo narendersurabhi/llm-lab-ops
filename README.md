@@ -87,6 +87,7 @@ Metrics exposed by gateway:
 make release   # generate eval + model card artifacts
 make test      # lint, typecheck, unit + integration tests
 make lint      # lint only
+make index     # build SQLite FTS5 index at policy-llm-lab/artifacts/index.sqlite
 make loadtest  # basic load test against gateway
 make kind-up   # kind cluster + helm install
 ```

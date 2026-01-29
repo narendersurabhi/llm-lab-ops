@@ -39,6 +39,7 @@ def run_eval(data_dir: Path | None = None, thresholds: EvalThresholds | None = N
         results = index.retrieve(sample.query, top_k=1)
         if results and results[0]["doc_id"] == sample.expected_doc_id:
             correct += 1
+    index.close()
     recall = correct / len(EVAL_SAMPLES)
     citation_coverage = recall
     report = {
@@ -65,8 +66,10 @@ def run_eval(data_dir: Path | None = None, thresholds: EvalThresholds | None = N
     return report
 
 
-def write_eval_report(path: Path) -> dict:
-    report = run_eval()
+def write_eval_report(
+    path: Path, data_dir: Path = DATA_DIR, index_path: Path = INDEX_PATH
+) -> dict:
+    report = run_eval(data_dir=data_dir, index_path=index_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report

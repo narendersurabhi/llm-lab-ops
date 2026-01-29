@@ -3,8 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from llm_lab.indexer import BM25Index, build_index, load_documents, load_index, persist_index
-from llm_lab.config import INDEX_PATH
+from llm_lab.indexer import IndexBuilder, SQLiteIndex, load_index
 
 app = FastAPI(title="LLM Lab Retrieval API")
 
@@ -19,27 +18,32 @@ class RetrievalResponse(BaseModel):
     results: list[dict]
 
 
-INDEX: BM25Index | None = None
+INDEX: SQLiteIndex | None = None
 
 
-def ensure_index() -> BM25Index:
+def ensure_index() -> SQLiteIndex:
     global INDEX
     if INDEX is not None:
         return INDEX
-    if INDEX_PATH.exists():
+    try:
         INDEX = load_index()
         return INDEX
-    docs = load_documents()
-    if not docs:
-        raise RuntimeError("No documents available for indexing")
-    INDEX = build_index(docs)
-    persist_index(INDEX)
-    return INDEX
+    except FileNotFoundError:
+        builder = IndexBuilder()
+        builder.build()
+        INDEX = load_index()
+        return INDEX
 
 
 @app.on_event("startup")
 async def startup() -> None:
     ensure_index()
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    if INDEX is not None:
+        INDEX.close()
 
 
 @app.get("/health")

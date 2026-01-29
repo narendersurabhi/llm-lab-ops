@@ -9,5 +9,4 @@ INDEX_DIR = ARTIFACTS_DIR / "index"
 MODEL_DIR = ARTIFACTS_DIR / "model"
 CONTRACTS_DIR = ROOT.parent / "contracts"
 
-INDEX_PATH = INDEX_DIR / "bm25.pkl"
-DOCS_PATH = INDEX_DIR / "docs.json"
+INDEX_PATH = ARTIFACTS_DIR / "index.sqlite"
