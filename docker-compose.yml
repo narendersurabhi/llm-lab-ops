@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  policy-llm-lab:
+    build:
+      context: .
+      dockerfile: policy-llm-lab/Dockerfile
+    ports:
+      - "8001:8001"
+
+  policy-llm-ops:
+    build:
+      context: .
+      dockerfile: policy-llm-ops/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      RETRIEVAL_URL: http://policy-llm-lab:8001
+      MODEL_DIR: /models
+      LLAMA_CPP_URL: http://llama:8080
+      LLM_PROVIDER: mock
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    volumes:
+      - ./policy-llm-lab/artifacts/model:/models
+    depends_on:
+      - policy-llm-lab
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  loki:
+    image: grafana/loki:2.9.4
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infra/loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+
+  llama:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    profiles: ["llama"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./policy-llm-lab/artifacts/model:/models
+    command: ["-m", "/models/model.gguf", "--host", "0.0.0.0", "--port", "8080"]

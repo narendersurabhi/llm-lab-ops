@@ -1,0 +1,5 @@
+apiVersion: v2
+name: llm-stack
+description: LLM Ops + Lab stack
+version: 0.1.0
+appVersion: "0.1.0"

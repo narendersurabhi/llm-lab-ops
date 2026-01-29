@@ -1,0 +1,1 @@
+Canary deployments shift a small percentage of traffic to a candidate release. If latency or error rates regress beyond thresholds, the system rolls back automatically.

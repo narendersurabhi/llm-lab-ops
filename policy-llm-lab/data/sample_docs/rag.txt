@@ -1,0 +1,1 @@
+Retrieval-augmented generation (RAG) combines document retrieval with language model generation. A retriever selects relevant passages and the generator cites them as sources. RAG reduces hallucinations by grounding answers in retrieved context.

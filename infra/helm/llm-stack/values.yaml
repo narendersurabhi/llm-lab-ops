@@ -1,0 +1,15 @@
+llmLab:
+  image: policy-llm-lab:dev
+  port: 8001
+
+llmOps:
+  image: policy-llm-ops:dev
+  port: 8000
+  env:
+    RETRIEVAL_URL: http://policy-llm-lab:8001
+    MODEL_DIR: /models
+    LLM_PROVIDER: mock
+    LLAMA_CPP_URL: http://llama:8080
+
+modelArtifacts:
+  hostPath: /models

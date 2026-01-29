@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-llm-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-llm-lab
+  template:
+    metadata:
+      labels:
+        app: policy-llm-lab
+    spec:
+      containers:
+        - name: policy-llm-lab
+          image: {{ .Values.llmLab.image }}
+          ports:
+            - containerPort: {{ .Values.llmLab.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: policy-llm-lab
+spec:
+  selector:
+    app: policy-llm-lab
+  ports:
+    - port: {{ .Values.llmLab.port }}
+      targetPort: {{ .Values.llmLab.port }}
+      name: http

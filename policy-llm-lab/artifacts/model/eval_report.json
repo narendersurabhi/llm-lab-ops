@@ -1,0 +1,15 @@
+{
+  "pass": true,
+  "created_at": "2026-01-29T00:00:00Z",
+  "eval_dataset": "sample_docs_v1",
+  "metrics": {
+    "retrieval_recall": 1.0,
+    "num_queries": 3
+  },
+  "baseline": {
+    "p95_latency_ms": 1200.0,
+    "error_rate": 0.01,
+    "tool_success_rate": 0.98
+  },
+  "notes": "Baseline metrics are conservative placeholders for MVP."
+}

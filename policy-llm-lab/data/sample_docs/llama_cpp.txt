@@ -1,0 +1,1 @@
+llama.cpp runs LLM inference locally using GGUF model files. It can expose an HTTP server that accepts completion requests and returns generated text.

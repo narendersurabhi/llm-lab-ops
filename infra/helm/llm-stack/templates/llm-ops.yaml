@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: policy-llm-ops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: policy-llm-ops
+  template:
+    metadata:
+      labels:
+        app: policy-llm-ops
+    spec:
+      containers:
+        - name: policy-llm-ops
+          image: {{ .Values.llmOps.image }}
+          ports:
+            - containerPort: {{ .Values.llmOps.port }}
+          env:
+            {{- range $key, $value := .Values.llmOps.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: model-artifacts
+              mountPath: /models
+      volumes:
+        - name: model-artifacts
+          hostPath:
+            path: {{ .Values.modelArtifacts.hostPath }}
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: policy-llm-ops
+spec:
+  selector:
+    app: policy-llm-ops
+  ports:
+    - port: {{ .Values.llmOps.port }}
+      targetPort: {{ .Values.llmOps.port }}
+      name: http

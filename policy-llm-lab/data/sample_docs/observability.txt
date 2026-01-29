@@ -1,0 +1,1 @@
+Observability in platform engineering includes metrics, logs, and traces. OpenTelemetry provides standardized tracing. Prometheus scrapes metrics, and Grafana visualizes dashboards. Loki aggregates logs with labels.

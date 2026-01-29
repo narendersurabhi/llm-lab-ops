@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install -e ./policy-llm-lab[dev]
+          pip install -e ./policy-llm-ops[dev]
+      - name: Lint
+        run: |
+          cd policy-llm-lab && python -m ruff check .
+          cd ../policy-llm-ops && python -m ruff check .
+      - name: Typecheck
+        run: |
+          cd policy-llm-lab && python -m mypy llm_lab
+          cd ../policy-llm-ops && python -m mypy llm_ops
+      - name: Unit + Integration tests
+        run: |
+          cd policy-llm-lab && python -m pytest
+          cd ../policy-llm-ops && python -m pytest
+      - name: Docker compose integration
+        run: |
+          docker compose up -d --build
+          sleep 8
+          curl -f http://localhost:8000/health
+          curl -f http://localhost:8000/v1/chat/completions \
+            -H 'Content-Type: application/json' \
+            -d '{"model":"local-llama-gguf","messages":[{"role":"user","content":"What is RAG?"}]}'
+          docker compose down

@@ -1,0 +1,36 @@
+[project]
+name = "policy-llm-lab"
+version = "0.1.0"
+description = "LLM lab pipeline: ingest, index, eval, release"
+requires-python = ">=3.11"
+readme = "README.md"
+dependencies = [
+  "fastapi>=0.109",
+  "uvicorn>=0.23",
+  "pydantic>=2.5",
+  "rank-bm25>=0.2",
+  "numpy>=1.26",
+  "jsonschema>=4.20",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4",
+  "httpx>=0.26",
+  "ruff>=0.1",
+  "mypy>=1.7",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
