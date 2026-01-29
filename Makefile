@@ -1,4 +1,4 @@
-.PHONY: up test lint typecheck kind-up loadtest release index ingest eval contract-all test-integration e2e uv-venv uv-install
+.PHONY: up test lint typecheck kind-up loadtest release index ingest eval contract-all test-integration e2e uv-venv uv-install deps
 
 PYTHON ?= python3
 UV ?= uv
@@ -58,5 +58,10 @@ uv-venv:
 
 uv-install:
 	$(UV) venv
+	$(UV) pip install -e ./policy-llm-lab[dev]
+	$(UV) pip install -e ./policy-llm-ops[dev]
+
+deps:
+	$(UV) venv --python $(UV_PYTHON)
 	$(UV) pip install -e ./policy-llm-lab[dev]
 	$(UV) pip install -e ./policy-llm-ops[dev]
