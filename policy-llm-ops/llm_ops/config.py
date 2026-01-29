@@ -8,6 +8,7 @@ class Settings:
     def __init__(self) -> None:
         self.service_name = os.getenv("SERVICE_NAME", "policy-llm-ops-gateway")
         self.retrieval_url = os.getenv("RETRIEVAL_URL", "http://policy-llm-lab:8001")
+        self.retrieval_db_path = os.getenv("RETRIEVAL_DB_PATH", "/release/index/index.sqlite")
         self.llama_cpp_url = os.getenv("LLAMA_CPP_URL", "http://llama:8080")
         self.llm_provider = os.getenv("LLM_PROVIDER", "llama_cpp")
         self.model_dir = Path(os.getenv("MODEL_DIR", "/models"))
