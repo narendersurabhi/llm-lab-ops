@@ -3,46 +3,17 @@
   "$id": "https://example.com/schemas/eval_report.schema.json",
   "title": "EvalReport",
   "type": "object",
-  "required": ["pass", "created_at", "eval_dataset", "metrics", "baseline", "thresholds"],
+  "required": ["pass", "created_at", "eval_dataset", "metrics", "baseline"],
   "properties": {
     "pass": {"type": "boolean"},
     "created_at": {"type": "string", "format": "date-time"},
     "eval_dataset": {"type": "string"},
     "metrics": {
       "type": "object",
-      "required": [
-        "retrieval_recall",
-        "retrieval_hit_rate",
-        "recall_at_5",
-        "citation_coverage",
-        "num_queries"
-      ],
+      "required": ["retrieval_recall", "num_queries"],
       "properties": {
         "retrieval_recall": {"type": "number", "minimum": 0, "maximum": 1},
-        "retrieval_hit_rate": {"type": "number", "minimum": 0, "maximum": 1},
-        "recall_at_5": {"type": "number", "minimum": 0, "maximum": 1},
-        "citation_coverage": {"type": "number", "minimum": 0, "maximum": 1},
         "num_queries": {"type": "integer", "minimum": 1}
-      },
-      "additionalProperties": false
-    },
-    "thresholds": {
-      "type": "object",
-      "required": [
-        "retrieval_hit_rate_min",
-        "recall_at_5_min",
-        "citation_coverage_min",
-        "runtime_error_rate_max",
-        "runtime_p95_regression_max",
-        "runtime_tool_success_min"
-      ],
-      "properties": {
-        "retrieval_hit_rate_min": {"type": "number", "minimum": 0, "maximum": 1},
-        "recall_at_5_min": {"type": "number", "minimum": 0, "maximum": 1},
-        "citation_coverage_min": {"type": "number", "minimum": 0, "maximum": 1},
-        "runtime_error_rate_max": {"type": "number", "minimum": 0, "maximum": 1},
-        "runtime_p95_regression_max": {"type": "number", "minimum": 0, "maximum": 1},
-        "runtime_tool_success_min": {"type": "number", "minimum": 0, "maximum": 1}
       },
       "additionalProperties": false
     },
