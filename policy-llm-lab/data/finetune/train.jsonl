@@ -1,0 +1,3 @@
+{"text":"User: What is RAG?\nAssistant: RAG is a method that retrieves relevant documents and uses them to ground a model's response."}
+{"text":"User: Explain tool calling in agents.\nAssistant: Tool calling lets an agent invoke external functions to fetch data or perform actions before answering."}
+{"text":"User: What is a policy assistant?\nAssistant: A policy assistant answers questions based on approved policy documents and citations."}

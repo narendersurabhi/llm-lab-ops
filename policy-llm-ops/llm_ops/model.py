@@ -73,3 +73,46 @@ class FakeModelClient(ModelClient):
         text = "(fake) " + prompt.split("Question:")[-1].strip()
         latency_ms = (time.perf_counter() - start) * 1000
         return text, latency_ms
+
+
+class MlxClient(ModelClient):
+    def __init__(
+        self,
+        model_name: str | None = None,
+        adapter_path: str | None = None,
+    ) -> None:
+        self.model_name = model_name or settings.mlx_model
+        self.adapter_path = adapter_path or settings.mlx_adapter_path
+        self._model = None
+        self._tokenizer = None
+        self._tracer = trace.get_tracer(__name__)
+
+    def _ensure_loaded(self) -> None:
+        if self._model is not None and self._tokenizer is not None:
+            return
+        try:
+            from mlx_lm.utils import load as mlx_load
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(
+                "mlx-lm is not installed. Install with `pip install mlx-lm` "
+                "and run on Apple Silicon."
+            ) from exc
+        tokenizer_config = {"trust_remote_code": settings.mlx_trust_remote_code}
+        self._model, self._tokenizer = mlx_load(
+            self.model_name, tokenizer_config=tokenizer_config, adapter_path=self.adapter_path
+        )
+
+    async def generate(self, prompt: str, max_tokens: int = 256) -> Tuple[str, float]:
+        start = time.perf_counter()
+        with self._tracer.start_as_current_span("model_inference"):
+            self._ensure_loaded()
+            from mlx_lm.generate import generate as mlx_generate
+
+            text = mlx_generate(
+                self._model,  # type: ignore[arg-type]
+                self._tokenizer,  # type: ignore[arg-type]
+                prompt,
+                max_tokens=max_tokens,
+            )
+        latency_ms = (time.perf_counter() - start) * 1000
+        return text.strip(), latency_ms

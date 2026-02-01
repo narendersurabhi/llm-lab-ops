@@ -1,0 +1,93 @@
+Metadata-Version: 2.4
+Name: policy-llm-lab
+Version: 0.1.0
+Summary: LLM lab pipeline: ingest, index, eval, release
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.109
+Requires-Dist: uvicorn>=0.23
+Requires-Dist: pydantic>=2.5
+Requires-Dist: jsonschema>=4.20
+Requires-Dist: pypdf>=4.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4; extra == "dev"
+Requires-Dist: httpx>=0.26; extra == "dev"
+Requires-Dist: ruff>=0.1; extra == "dev"
+Requires-Dist: mypy>=1.7; extra == "dev"
+Provides-Extra: train
+Requires-Dist: transformers>=4.40; extra == "train"
+Requires-Dist: datasets>=2.18; extra == "train"
+Requires-Dist: accelerate>=0.29; extra == "train"
+Requires-Dist: peft>=0.10; extra == "train"
+Requires-Dist: trl>=0.9; extra == "train"
+Requires-Dist: mlx-lm>=0.10; platform_system == "Darwin" and extra == "train"
+
+# policy-llm-lab
+
+Data → indexing → eval → release artifacts for the LLMOps pipeline.
+
+## Release bundle layout
+```
+dist/<release_id>/
+  manifest.json
+  model/
+    model_card.json
+    model.gguf
+  index/
+    index.sqlite
+  eval/
+    eval_report.json
+  contracts/
+    manifest.schema.json
+    model_card.schema.json
+    eval_report.schema.json
+  meta/
+    sbom.json
+    checksums.json
+    attestation.json
+    CHANGELOG.md
+```
+
+Schemas for `manifest.json`, `model_card.json`, and `eval_report.json` live in `contracts/`.
+
+## Testing
+```
+make test          # unit + component + contract
+make unit
+make component
+make contract
+make lint
+make typecheck
+```
+
+## Build pipeline
+```
+make ingest
+make index
+make eval
+make release RELEASE_ID=local-dev
+```
+
+## PDF ingestion (no OCR)
+1) Drop PDFs into `policy-llm-lab/data/pdfs/`
+2) Run:
+```
+make ingest-pdfs
+make index
+```
+
+PDFs are extracted to `policy-llm-lab/artifacts/ingest/pdfs/` as `.txt` files
+and automatically included in indexing.
+
+## Training (local + cloud)
+```
+make train-local   # LlamaFactory/Unsloth if installed
+make train-cloud   # LlamaFactory on GPU if installed
+make train-hf      # PyTorch + Transformers + PEFT (LoRA)
+make train-qlora   # QLoRA (CUDA GPU only; uses bitsandbytes)
+make train-dpo     # DPO alignment (requires preference dataset)
+make train-mlx     # Apple Silicon MLX LoRA
+```
+
+Configs live in `policy-llm-lab/train/configs/` and output adapters go to
+`policy-llm-lab/train/outputs/`. Use eval + release after training.

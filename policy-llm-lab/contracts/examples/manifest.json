@@ -6,7 +6,8 @@
   "artifacts": {
     "model": {
       "model_card": "model/model_card.json",
-      "model_gguf": "model/model.gguf"
+      "model_gguf": "model/model.gguf",
+      "adapter": "model/adapter"
     },
     "index": {
       "index_sqlite": "index/index.sqlite"
@@ -38,6 +39,10 @@
     "model": {
       "algo": "sha256",
       "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "adapter": {
+      "algo": "sha256",
+      "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
     },
     "bundle": {
       "algo": "sha256",

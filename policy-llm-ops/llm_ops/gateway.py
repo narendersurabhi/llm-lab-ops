@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, Field, ConfigDict
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from opentelemetry import trace
@@ -24,7 +24,7 @@ from llm_ops.metrics import (
     TOKENS_IN,
     TOKENS_OUT,
 )
-from llm_ops.model import FakeModelClient, LlamaCppClient, MockModelClient, ModelClient
+from llm_ops.model import FakeModelClient, LlamaCppClient, MockModelClient, MlxClient, ModelClient
 from llm_ops.observability import init_tracing, instrument_app
 from llm_ops.release_manager import ReleaseManager, ReleaseBundle
 from llm_ops.tools import RetrievalTool
@@ -43,13 +43,18 @@ release_manager = ReleaseManager()
 tracer = trace.get_tracer(__name__)
 
 
-def _build_model(is_canary: bool) -> ModelClient:
+def _build_model(is_canary: bool, bundle: ReleaseBundle | None = None) -> ModelClient:
     if settings.llm_provider == "mock":
         return MockModelClient()
     if settings.llm_provider == "fake":
         return FakeModelClient(mode="normal")
     if settings.llm_provider == "fake_regression":
         return FakeModelClient(mode="regression")
+    if settings.llm_provider == "mlx":
+        adapter_path = None
+        if bundle and bundle.adapter_path and bundle.adapter_path.exists():
+            adapter_path = str(bundle.adapter_path)
+        return MlxClient(adapter_path=adapter_path)
     if is_canary:
         return MockModelClient()
     return LlamaCppClient()
@@ -61,11 +66,11 @@ def init_runtime() -> None:
     if not release_bundle.allowed:
         raise RuntimeError("Release gate failed: eval_report.pass is false")
     retrieval = RetrievalTool(db_path=release_bundle.index_path)
-    agent = LangGraphAgent(retrieval=retrieval, model=_build_model(False))
+    agent = LangGraphAgent(retrieval=retrieval, model=_build_model(False, release_bundle))
     if settings.canary_enabled:
         canary_agent = LangGraphAgent(
             retrieval=RetrievalTool(db_path=release_bundle.index_path),
-            model=_build_model(True),
+            model=_build_model(True, release_bundle),
         )
         canary = CanaryController(release_bundle.eval_report_path)
     else:
@@ -223,6 +228,30 @@ async def chat_completions(
         retrieval_hit=response.retrieval_hit,
         citation_coverage=round(response.citation_coverage, 3),
     )
+    if req.stream:
+        async def _event_stream():
+            content = payload.choices[0]["message"]["content"]
+            chunk_size = 64
+            for i in range(0, len(content), chunk_size):
+                delta = content[i : i + chunk_size]
+                data = {
+                    "id": payload.id,
+                    "object": "chat.completion.chunk",
+                    "created": payload.created,
+                    "model": payload.model,
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {"content": delta},
+                            "finish_reason": None,
+                        }
+                    ],
+                }
+                yield f"data: {json.dumps(data)}\n\n"
+            yield "data: [DONE]\n\n"
+
+        return StreamingResponse(_event_stream(), media_type="text/event-stream")
+
     return payload
 
 

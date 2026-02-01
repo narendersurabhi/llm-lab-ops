@@ -96,6 +96,7 @@
     "tags": {"type": "array", "items": {"type": "string"}},
     "intended_use": {"type": "string", "minLength": 1},
     "limitations": {"type": "string", "minLength": 1},
-    "eval_report_path": {"$ref": "#/$defs/path_eval"}
+    "eval_report_path": {"$ref": "#/$defs/path_eval"},
+    "adapter_path": {"type": "string", "pattern": "^model/[^\\s]+$"}
   }
 }

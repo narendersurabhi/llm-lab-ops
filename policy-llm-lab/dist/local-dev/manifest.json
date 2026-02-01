@@ -1,12 +1,13 @@
 {
   "release_id": "local-dev",
   "bundle_version": "0.1.0",
-  "created_at": "2026-01-29T20:29:10.238709+00:00",
-  "git_sha": "28a4fdb0587619c3c42c4e7f51921c1bcf624e2d",
+  "created_at": "2026-01-31T21:23:25.211279+00:00",
+  "git_sha": "0125a81c00d866c2873afd92982f9963b9cc3a99",
   "artifacts": {
     "model": {
       "model_card": "model/model_card.json",
-      "model_gguf": "model/model.gguf"
+      "model_gguf": "model/model.gguf",
+      "adapter": "model/adapter"
     },
     "index": {
       "index_sqlite": "index/index.sqlite"
@@ -49,11 +50,15 @@
     },
     "eval": {
       "algo": "sha256",
-      "value": "112e532475957d74c4e07343d7fb0c2128f8f37690e0f20c78ad9484167255b4"
+      "value": "fc663a6346037ae7f87dea6df045baefe1dcfb9df9f3d37bb180af1ab2b69d8d"
+    },
+    "adapter": {
+      "algo": "sha256",
+      "value": "9b7db395461c3786242e1bf8b868d76c2eab1d34620c44a003f9f721b21fb75d"
     },
     "bundle": {
       "algo": "sha256",
-      "value": "b13151e5dd7611247c680162378dbf87d9baa0f604b3aa651ada9c663055660b"
+      "value": "47c792b933a4f6ba268cfbd1d39c502c95a59dd929258d11a7894b09f34b2237"
     }
   },
   "notes": "Fingerprints cover dataset, model, index, eval, and bundle."

@@ -54,7 +54,8 @@
           "properties": {
             "model_card": {"$ref": "#/$defs/path_model"},
             "model_gguf": {"$ref": "#/$defs/path_model"},
-            "tokenizer": {"$ref": "#/$defs/path_model"}
+            "tokenizer": {"$ref": "#/$defs/path_model"},
+            "adapter": {"$ref": "#/$defs/path_model"}
           }
         },
         "index": {
@@ -124,6 +125,7 @@
         "dataset": {"$ref": "#/$defs/fingerprint"},
         "index": {"$ref": "#/$defs/fingerprint"},
         "model": {"$ref": "#/$defs/fingerprint"},
+        "adapter": {"$ref": "#/$defs/fingerprint"},
         "bundle": {"$ref": "#/$defs/fingerprint"},
         "eval": {"$ref": "#/$defs/fingerprint"},
         "sbom": {"$ref": "#/$defs/fingerprint"},

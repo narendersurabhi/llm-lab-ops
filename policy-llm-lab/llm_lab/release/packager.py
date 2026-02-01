@@ -141,27 +141,45 @@ def build_model_card(
     bundle_version: str,
     dataset_fingerprint: dict[str, str],
     eval_report_path: str,
+    adapter_path: str | None = None,
 ) -> dict[str, Any]:
     training_hash = hashlib.sha256(b"local-dev-training").hexdigest()
-    return {
+    tuning_method = "sft_lora" if adapter_path else "none"
+    runtime_compatibility = ["mlx"] if adapter_path else ["llama.cpp"]
+    model_name = "local-mlx-lora" if adapter_path else "local-llama-gguf"
+    base_model = (
+        {"name": "Qwen/Qwen2.5-3B-Instruct"}
+        if adapter_path
+        else {"name": "llama", "version": "2-7b"}
+    )
+    quantization = (
+        {"format": "fp16", "bits": 16} if adapter_path else {"format": "Q4_K_M", "bits": 4, "group_size": 32}
+    )
+    parameters = 3085000000 if adapter_path else 7000000000
+
+    model_card = {
         "release_id": release_id,
         "bundle_version": bundle_version,
         "created_at": _now_iso(),
         "git_sha": _git_sha(),
-        "model_name": "local-llama-gguf",
-        "base_model": {"name": "llama", "version": "2-7b"},
-        "tuning_method": "none",
+        "model_name": model_name,
+        "base_model": base_model,
+        "tuning_method": tuning_method,
         "training_config_hash": training_hash,
         "dataset_fingerprint": dataset_fingerprint,
-        "runtime_compatibility": ["llama.cpp"],
-        "quantization": {"format": "Q4_K_M", "bits": 4, "group_size": 32},
-        "parameters": 7000000000,
+        "runtime_compatibility": runtime_compatibility,
+        "quantization": quantization,
+        "parameters": parameters,
         "license": "unknown",
         "tags": ["local", "gguf", "llama.cpp"],
         "intended_use": "Local agentic RAG evaluation and release bundle demo.",
         "limitations": "Demo-only model card; not tuned for production use.",
         "eval_report_path": eval_report_path,
     }
+    if adapter_path:
+        model_card["adapter_path"] = adapter_path
+        model_card["tags"] = ["local", "mlx", "lora"]
+    return model_card
 
 
 def ensure_placeholder_model(path: Path) -> None:
@@ -190,6 +208,7 @@ def build_manifest(
     bundle_version: str,
     fingerprints: dict[str, dict[str, str]],
     include_meta: bool = True,
+    adapter_path: str | None = None,
 ) -> dict[str, Any]:
     artifacts: dict[str, Any] = {
         "model": {
@@ -204,6 +223,8 @@ def build_manifest(
             "eval_report_schema": "contracts/eval_report.schema.json",
         },
     }
+    if adapter_path:
+        artifacts["model"]["adapter"] = adapter_path
     if include_meta:
         artifacts["meta"] = {
             "sbom": {"sbom_json": "meta/sbom.json"},
@@ -316,11 +337,27 @@ def build_release(
     bundle_version = _bundle_version()
     dataset_fingerprint = _fingerprint_directory(data_dir)
 
+    adapter_candidates = [
+        REPO_ROOT / "policy-llm-lab" / "adapters",
+        REPO_ROOT / "policy-llm-lab" / "train" / "outputs" / "adapters" / "mlx",
+    ]
+    adapter_dir = next((p for p in adapter_candidates if p.exists()), None)
+    adapter_source = None
+    adapter_config = None
+    if adapter_dir:
+        candidate_weights = adapter_dir / "adapters.safetensors"
+        candidate_config = adapter_dir / "adapter_config.json"
+        if candidate_weights.exists() and candidate_config.exists():
+            adapter_source = candidate_weights
+            adapter_config = candidate_config
+    adapter_rel_path = "model/adapter" if adapter_source else None
+
     model_card = build_model_card(
         release_id=release_id,
         bundle_version=bundle_version,
         dataset_fingerprint=dataset_fingerprint,
         eval_report_path="eval/eval_report.json",
+        adapter_path=adapter_rel_path,
     )
     model_card_path = model_dir / "model_card.json"
     model_card_path.write_text(json.dumps(model_card, indent=2), encoding="utf-8")
@@ -356,6 +393,11 @@ def build_release(
 
     for artifact in [model_card_path, model_dir / "model.gguf"]:
         shutil.copy2(artifact, release_model_dir / artifact.name)
+    if adapter_source and adapter_config:
+        adapter_release_dir = release_model_dir / "adapter"
+        adapter_release_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(adapter_source, adapter_release_dir / "adapters.safetensors")
+        shutil.copy2(adapter_config, adapter_release_dir / "adapter_config.json")
 
     shutil.copy2(index_path, release_index_dir / "index.sqlite")
     shutil.copy2(eval_report_path, release_eval_dir / "eval_report.json")
@@ -372,6 +414,9 @@ def build_release(
         release_contracts_dir / "model_card.schema.json",
         release_contracts_dir / "eval_report.schema.json",
     ]
+    if adapter_source:
+        sbom_files.append(release_model_dir / "adapter" / "adapters.safetensors")
+        sbom_files.append(release_model_dir / "adapter" / "adapter_config.json")
     sbom = build_sbom(output_dir, sbom_files)
     sbom_path.write_text(json.dumps(sbom, indent=2), encoding="utf-8")
 
@@ -381,6 +426,8 @@ def build_release(
         "model": _fingerprint_file(release_model_dir / "model.gguf"),
         "eval": _fingerprint_file(release_eval_dir / "eval_report.json"),
     }
+    if adapter_source:
+        fingerprints["adapter"] = _fingerprint_directory(release_model_dir / "adapter")
     fingerprints["bundle"] = _fingerprint_bundle(fingerprints)
 
     manifest = build_manifest(
@@ -388,6 +435,7 @@ def build_release(
         bundle_version=bundle_version,
         fingerprints=fingerprints,
         include_meta=True,
+        adapter_path=adapter_rel_path,
     )
     validate_schema(manifest, contracts_dir / "manifest.schema.json")
     manifest_path = output_dir / RELEASE_LAYOUT["manifest"]
@@ -409,6 +457,9 @@ def build_release(
         release_contracts_dir / "model_card.schema.json",
         release_contracts_dir / "eval_report.schema.json",
     ]
+    if adapter_source:
+        checksum_targets.append(release_model_dir / "adapter" / "adapters.safetensors")
+        checksum_targets.append(release_model_dir / "adapter" / "adapter_config.json")
     checksums = build_checksums(checksum_targets, output_dir)
     checksums_path.write_text(json.dumps(checksums, indent=2), encoding="utf-8")
 

@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from llm_lab.config import DATA_DIR, INDEX_META_PATH, INDEX_PATH
+from llm_lab.config import DATA_DIR, INDEX_META_PATH, INDEX_PATH, INGEST_DIR
 
 WORD_PATTERN = re.compile(r"\S+")
 QUERY_TOKEN_RE = re.compile(r"[A-Za-z0-9]+")
@@ -167,6 +167,7 @@ class IndexBuilder:
     def __init__(
         self,
         data_dir: Path = DATA_DIR,
+        extra_dirs: list[Path] | None = None,
         index_path: Path = INDEX_PATH,
         meta_path: Path = INDEX_META_PATH,
         chunk_size: int = 200,
@@ -175,6 +176,7 @@ class IndexBuilder:
         if chunk_overlap >= chunk_size:
             raise ValueError("chunk_overlap must be smaller than chunk_size")
         self.data_dir = data_dir
+        self.extra_dirs = extra_dirs or []
         self.index_path = index_path
         self.meta_path = meta_path
         self.chunk_size = chunk_size
@@ -182,16 +184,25 @@ class IndexBuilder:
 
     def ingest_documents(self) -> list[Document]:
         docs: list[Document] = []
-        for path in sorted(self.data_dir.glob("*")):
-            if not path.is_file():
-                continue
-            if path.suffix.lower() not in {".txt", ".md", ".markdown", ".pdf"}:
-                continue
-            text = self._read_file(path)
-            if not text.strip():
-                continue
-            docs.append(Document(doc_id=path.stem, source=str(path), text=text))
+        for directory in [self.data_dir, *self.extra_dirs]:
+            for path in sorted(directory.glob("*")):
+                if not path.is_file():
+                    continue
+                if path.suffix.lower() not in {".txt", ".md", ".markdown"}:
+                    continue
+                text = self._read_file(path)
+                if not text.strip():
+                    continue
+                doc_id = self._doc_id_for(path, directory)
+                docs.append(Document(doc_id=doc_id, source=str(path), text=text))
         return docs
+
+    def _doc_id_for(self, path: Path, base_dir: Path) -> str:
+        if base_dir == self.data_dir:
+            return path.stem
+        rel = path.relative_to(base_dir)
+        safe = re.sub(r"[^A-Za-z0-9]+", "-", rel.stem).strip("-").lower()
+        return f"{base_dir.name}-{safe}"
 
     def _read_file(self, path: Path) -> str:
         suffix = path.suffix.lower()
@@ -200,8 +211,6 @@ class IndexBuilder:
         if suffix in {".md", ".markdown"}:
             raw = path.read_text(encoding="utf-8")
             return self._normalize_text(self._strip_markdown(raw))
-        if suffix == ".pdf":
-            return ""
         return ""
 
     def _strip_markdown(self, text: str) -> str:
@@ -341,13 +350,21 @@ def load_index(index_path: Path = INDEX_PATH) -> SQLiteIndex:
 
 
 def build_index(data_dir: Path = DATA_DIR, index_path: Path = INDEX_PATH) -> SQLiteIndex:
-    builder = IndexBuilder(data_dir=data_dir, index_path=index_path)
+    extra_dirs = []
+    ingest_pdfs_dir = INGEST_DIR / "pdfs"
+    if ingest_pdfs_dir.exists():
+        extra_dirs.append(ingest_pdfs_dir)
+    builder = IndexBuilder(data_dir=data_dir, extra_dirs=extra_dirs, index_path=index_path)
     builder.build()
     return load_index(index_path)
 
 
 def main() -> None:
-    builder = IndexBuilder()
+    extra_dirs = []
+    ingest_pdfs_dir = INGEST_DIR / "pdfs"
+    if ingest_pdfs_dir.exists():
+        extra_dirs.append(ingest_pdfs_dir)
+    builder = IndexBuilder(extra_dirs=extra_dirs)
     path = builder.build()
     print(f"Indexed documents into {path}")
 

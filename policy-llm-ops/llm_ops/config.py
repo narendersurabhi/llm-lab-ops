@@ -15,6 +15,11 @@ class Settings:
         self.llama_cpp_url = os.getenv("LLAMA_CPP_URL", "http://llama:8080")
         self.llm_provider = os.getenv("LLM_PROVIDER", "llama_cpp")
         self.model_dir = Path(os.getenv("MODEL_DIR", "/models"))
+        self.mlx_model = os.getenv("MLX_MODEL", "Qwen/Qwen2.5-3B-Instruct")
+        self.mlx_adapter_path = os.getenv("MLX_ADAPTER_PATH")
+        self.mlx_trust_remote_code = (
+            os.getenv("MLX_TRUST_REMOTE_CODE", "true").lower() == "true"
+        )
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
         self.prompt_sample_rate = float(os.getenv("PROMPT_SAMPLE_RATE", "0.0"))
         self.canary_enabled = os.getenv("CANARY_ENABLED", "true").lower() == "true"

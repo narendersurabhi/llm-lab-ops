@@ -1,0 +1,12 @@
+base_model: meta-llama/Llama-3.1-8B-Instruct
+method: lora
+dataset_path: data/finetune/train.jsonl
+output_dir: train/outputs/adapters/cloud
+max_seq_length: 4096
+num_epochs: 3
+learning_rate: 1e-4
+batch_size: 4
+grad_accumulation: 4
+bf16: true
+fp16: false
+notes: "Cloud LoRA config (GPU-friendly)."

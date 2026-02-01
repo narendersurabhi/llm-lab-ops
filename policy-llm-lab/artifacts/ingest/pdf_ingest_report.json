@@ -1,0 +1,30 @@
+{
+  "ingested": [
+    "20231206-EB-Top_Six_Kafka_Projects_Fail.pdf",
+    "2024-05-EB-A_Compact_GuideTo_RAG.pdf",
+    "20250423-EB-Event-Driven_Design_for_Agents.pdf",
+    "A-Practical-Guide-to-AI-Agents-1.pdf",
+    "A-Practical-Guide-to-AI-Agents.pdf",
+    "AI_Agent_Playbook_1755574414.pdf",
+    "Data-Strategies-for-AI-Leaders.pdf",
+    "Essential-GraphRAG.pdf",
+    "Generative-AI-and-LLMs-for-Dummies.pdf",
+    "Get_more_from_containerization_with_Kubernetes_patterns_1740940283.pdf",
+    "HighPerformanceAI.pdf",
+    "Mastering_RAG_Guide_1767085574.pdf",
+    "Neo4j-AWS-Improving-GenAI-Outcomes.pdf",
+    "OReilly-Report-Designing-a-Modern-Application-Data-Stack.pdf",
+    "Redis_ePub_Whitepaper_5StepsToBuildingAIApp_250610 (1).pdf",
+    "Reference architecture of an Internal Developer Platform.pdf",
+    "big-book-of-data-engineering-3rd-edition-1-27-2025.pdf",
+    "cloud-data-engineering-for-dummies.pdf",
+    "eBook-DesigningCloudArchitectureCloudcraft.pdf",
+    "eBook-GoogleCloudFutureofAI.pdf",
+    "eea88a96-d955-4c99-b01e-f665a7055eee.pdf",
+    "oreilly-technical-guide-understanding-etl.pdf"
+  ],
+  "skipped_empty": [
+    "Zapier-AI-Orchestration-Report_lflpug.pdf"
+  ],
+  "errors": []
+}

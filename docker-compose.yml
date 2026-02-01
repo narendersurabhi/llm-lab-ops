@@ -13,7 +13,7 @@ services:
       context: .
       dockerfile: policy-llm-ops/Dockerfile
     ports:
-      - "8000:8000"
+      - "${OPS_PORT:-8000}:8000"
     environment:
       RETRIEVAL_URL: http://policy-llm-lab:8001
       MODEL_DIR: /models
@@ -28,6 +28,21 @@ services:
     depends_on:
       - policy-llm-lab
       - jaeger
+
+  policy-llm-ui:
+    build:
+      context: .
+      dockerfile: policy-llm-ops/Dockerfile
+    ports:
+      - "${UI_PORT:-8502}:8501"
+    environment:
+      OPS_BASE_URL: ${OPS_BASE_URL:-http://policy-llm-ops:8000}
+      RELEASES_DIR: /releases
+    command: ["streamlit", "run", "ui/app.py", "--server.address=0.0.0.0", "--server.port=8501"]
+    volumes:
+      - ./policy-llm-lab/dist:/releases:ro
+    depends_on:
+      - policy-llm-ops
 
   jaeger:
     image: jaegertracing/all-in-one:1.52
@@ -59,7 +74,7 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
 
   llama:
-    image: ghcr.io/ggerganov/llama.cpp:server
+    image: ${LLAMA_IMAGE:-ghcr.io/ggml-org/llama.cpp:server}
     profiles: ["llama"]
     ports:
       - "8080:8080"

@@ -21,6 +21,7 @@ class ReleaseBundle:
     model_dir: Path
     index_path: Path
     eval_report_path: Path
+    adapter_path: Path | None
     allowed: bool
 
 
@@ -55,6 +56,11 @@ class ReleaseManager:
         model_card_path = self._resolve_artifact(path, manifest, "model", "model_card")
         eval_report_path = self._resolve_artifact(path, manifest, "eval", "eval_report")
         index_path = self._resolve_artifact(path, manifest, "index", "index_sqlite")
+        adapter_path = None
+        try:
+            adapter_path = self._resolve_artifact(path, manifest, "model", "adapter")
+        except KeyError:
+            adapter_path = None
 
         if not model_card_path.exists():
             raise FileNotFoundError(f"Model card not found at {model_card_path}")
@@ -79,6 +85,7 @@ class ReleaseManager:
             model_dir=path / "model",
             index_path=index_path,
             eval_report_path=eval_report_path,
+            adapter_path=adapter_path,
             allowed=allowed,
         )
 

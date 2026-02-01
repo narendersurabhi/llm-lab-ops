@@ -1,0 +1,158 @@
+INFO:     Started server process [76839]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 68634.07it/s]
+mx.metal.device_info is deprecated and will be removed in a future version. Use mx.device_info instead.
+{"timestamp": "[REDACTED_PHONE]01T07:02:[REDACTED_PHONE]+00:00", "event": "chat_completion", "request_id": "0b058c53-06d0-477f-bd79-3e4635cfa1b8", "variant": "stable", "tokens_in": 47, "tokens_out": 20, "retrieval_hit": false, "citation_coverage": 0.0, "level": "INFO"}
+{"timestamp": "[REDACTED_PHONE]01T07:02:[REDACTED_PHONE]+00:00", "event": "request_complete", "request_id": null, "path": "/v1/chat/completions", "status": 200, "latency_ms": 7764.45, "level": "INFO"}
+INFO:     127.0.0.1:54415 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+{"timestamp": "[REDACTED_PHONE]01T07:03:[REDACTED_PHONE]+00:00", "event": "chat_completion", "request_id": "06f1e6d8-c691-4226-8b38-b11834b2f9d5", "variant": "stable", "tokens_in": 49, "tokens_out": 110, "retrieval_hit": false, "citation_coverage": 0.0, "level": "INFO"}
+{"timestamp": "[REDACTED_PHONE]01T07:03:[REDACTED_PHONE]+00:00", "event": "request_complete", "request_id": null, "path": "/v1/chat/completions", "status": 200, "latency_ms": 7688.55, "level": "INFO"}
+INFO:     127.0.0.1:54419 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+{"timestamp": "[REDACTED_PHONE]01T07:03:[REDACTED_PHONE]+00:00", "event": "chat_completion", "request_id": "126f426e-0c67-46c8-b053-00b9ba605690", "variant": "stable", "tokens_in": 47, "tokens_out": 20, "retrieval_hit": false, "citation_coverage": 0.0, "level": "INFO"}
+{"timestamp": "[REDACTED_PHONE]01T07:03:[REDACTED_PHONE]+00:00", "event": "request_complete", "request_id": null, "path": "/v1/chat/completions", "status": 200, "latency_ms": 1920.53, "level": "INFO"}
+INFO:     127.0.0.1:54420 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+ERROR:    Exception in ASGI application
+  + Exception Group Traceback (most recent call last):
+  |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 79, in collapse_excgroups
+  |     yield
+  |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 270, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 410, in run_asgi
+    |     result = await app(  # type: ignore[func-returns-value]
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    |     return await self.app(scope, receive, send)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1135, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/asgi/__init__.py", line 810, in __call__
+    |     await self.app(scope, otel_receive, otel_send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 198, in __call__
+    |     raise app_exc
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 115, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 102, in app
+    |     await response(scope, receive, send)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
+    |     with collapse_excgroups():
+    |          ^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/narendersurabhi/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    |     self.gen.throw(value)
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    |     raise exc
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
+    |     await func()
+    |   File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
+    |     async for chunk in self.body_iterator:
+    |   File "/Users/narendersurabhi/llmopspipeline/policy-llm-ops/llm_ops/gateway.py", line 250, in _event_stream
+    |     yield f"data: {json.dumps(data)}\n\n"
+    |                    ^^^^
+    | NameError: name 'json' is not defined. Did you forget to import 'json'
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/h11_impl.py", line 410, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1135, in __call__
+    await super().__call__(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/asgi/__init__.py", line 810, in __call__
+    await self.app(scope, otel_receive, otel_send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/opentelemetry/instrumentation/fastapi/__init__.py", line 307, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 198, in __call__
+    raise app_exc
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 115, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 102, in app
+    await response(scope, receive, send)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
+    with collapse_excgroups():
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/narendersurabhi/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
+    await func()
+  File "/Users/narendersurabhi/llmopspipeline/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
+    async for chunk in self.body_iterator:
+  File "/Users/narendersurabhi/llmopspipeline/policy-llm-ops/llm_ops/gateway.py", line 250, in _event_stream
+    yield f"data: {json.dumps(data)}\n\n"
+                   ^^^^
+NameError: name 'json' is not defined. Did you forget to import 'json'

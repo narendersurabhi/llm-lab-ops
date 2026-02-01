@@ -50,7 +50,10 @@ def build_prompt(query: str, contexts: list[RetrievalResult]) -> str:
     context_text = "\n".join(context_blocks)
     return (
         "You are a helpful assistant. Answer the question using the context below. "
-        "Cite sources with [doc_id].\n\n"
+        "Cite sources with [doc_id]. "
+        "Do not output tool calls, function syntax, or JSON. "
+        "Keep the answer concise (2-4 sentences max). "
+        "If the context is insufficient, say you don't know.\n\n"
         f"Context:\n{context_text}\n\nQuestion: {query}\nAnswer:"
     )
 
@@ -66,6 +69,9 @@ def format_citations(citations: list[Citation]) -> str:
 
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+|\n+")
 TOKEN_RE = re.compile(r"[A-Za-z0-9']+")
+TOOL_SPAM_RE = re.compile(r"(tool calling[:\s]*)+", re.IGNORECASE)
+TOOL_BLOCK_RE = re.compile(r"\[.*?calling.*?\]", re.IGNORECASE)
+ 
 
 
 def split_sentences(text: str) -> list[str]:
@@ -88,6 +94,25 @@ def sentence_supported(sentence_tokens: set[str], context_tokens: list[set[str]]
     return False
 
 
+def should_retrieve(query: str) -> bool:
+    text = query.strip().lower()
+    if not text:
+        return False
+    if len(text.split()) <= 3:
+        return False
+    if re.fullmatch(r"[0-9+\-*/().\s]+", text):
+        return False
+    keywords = {"policy", "rag", "retrieval", "llm", "agent", "citation", "model", "eval"}
+    return any(word in text for word in keywords)
+
+
+def clean_response(text: str) -> str:
+    cleaned = TOOL_BLOCK_RE.sub("", text)
+    cleaned = TOOL_SPAM_RE.sub("", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned).strip()
+    return cleaned
+
+
 def precheck_node(state: AgentState) -> dict[str, Any]:
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("node_precheck"):
@@ -108,6 +133,8 @@ def make_retrieve_node(retrieval: RetrievalTool) -> Callable[[AgentState], Any]:
     async def retrieve_node(state: AgentState) -> dict[str, Any]:
         with tracer.start_as_current_span("node_retrieve"):
             query = state.get("query", "")
+            if not should_retrieve(query):
+                return {"contexts": [], "retrieval_hit": False}
             contexts = await retrieval.run(query, top_k=3)
             return {"contexts": contexts, "retrieval_hit": bool(contexts)}
 
@@ -143,7 +170,8 @@ def make_generate_node(model: ModelClient, quote: QuoteTool) -> Callable[[AgentS
             query = state.get("query", "")
             contexts = state.get("contexts", [])
             prompt = build_prompt(query, contexts)
-            response_text, ttft_ms = await model.generate(prompt)
+            response_text, ttft_ms = await model.generate(prompt, max_tokens=128)
+            response_text = clean_response(response_text)
             citations = quote.run(contexts)
             content_tokens = estimate_tokens(response_text)
             return {

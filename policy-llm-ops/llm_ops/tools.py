@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import ast
 import re
 import sqlite3
 import time
@@ -191,3 +192,41 @@ class PolicyTool:
             ROLLING.record_tool_call(success=True)
             TOOL_CALLS_SUCCESS.labels(tool="policy").inc()
             return PolicyDecision(allowed=True)
+
+
+class CalculatorTool:
+    _ALLOWED_NODES = (
+        ast.Expression,
+        ast.BinOp,
+        ast.UnaryOp,
+        ast.Add,
+        ast.Sub,
+        ast.Mult,
+        ast.Div,
+        ast.Mod,
+        ast.Pow,
+        ast.USub,
+        ast.UAdd,
+        ast.Constant,
+    )
+
+    def __init__(self) -> None:
+        self._tracer = trace.get_tracer(__name__)
+
+    def run(self, expression: str) -> str:
+        TOOL_CALLS_TOTAL.labels(tool="calculator").inc()
+        with self._tracer.start_as_current_span("calculator_tool"):
+            try:
+                if len(expression) > 128:
+                    raise ValueError("Expression too long")
+                node = ast.parse(expression, mode="eval")
+                for subnode in ast.walk(node):
+                    if not isinstance(subnode, self._ALLOWED_NODES):
+                        raise ValueError("Unsupported expression")
+                result = eval(compile(node, "<expr>", "eval"), {"__builtins__": {}}, {})
+                TOOL_CALLS_SUCCESS.labels(tool="calculator").inc()
+                ROLLING.record_tool_call(success=True)
+                return str(result)
+            except Exception as exc:  # noqa: BLE001
+                ROLLING.record_tool_call(success=False)
+                raise RuntimeError("Calculator failed") from exc

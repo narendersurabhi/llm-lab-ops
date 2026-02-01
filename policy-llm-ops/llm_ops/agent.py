@@ -6,6 +6,9 @@ from typing import Any
 from llm_ops.config import settings
 from llm_ops.graph import build_graph
 from llm_ops.model import FakeModelClient, LlamaCppClient, MockModelClient, ModelClient
+from llm_ops.logging import setup_logging, log_event
+
+logger = setup_logging()
 from llm_ops.tools import PolicyTool, QuoteTool, RetrievalTool
 
 
@@ -46,7 +49,8 @@ class LangGraphAgent:
     async def run(self, messages: list[dict[str, Any]]) -> AgentResponse:
         try:
             result = await self.graph.ainvoke({"messages": messages})
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
+            log_event(logger, "agent_exception", error=str(exc))
             fallback = "The system encountered an error while processing the request."
             return AgentResponse(
                 content=fallback,

@@ -1,12 +1,14 @@
 {
-  "manifest.json": "f4a1d4bacc69b7be4002c47936b46b0a3a1f27400146e379c55c7c2734e68c56",
-  "meta/sbom.json": "b9bca5ccc0ba201fae449349786879286aebb5cbabcd6664623c4e390bc69303",
-  "meta/CHANGELOG.md": "39734412a843f479efeffb29173c70824ed6e8a853096a1bd63d1f3dcd1d9543",
-  "model/model_card.json": "dac68385d04fbb530990e3d8e8998d51abb2ec18b03c0a3ef25d8ce17237402d",
+  "manifest.json": "9340737d5e1bb63f97737780c8ef81c3332ee831e37e7f22eb030728bc6fed5f",
+  "meta/sbom.json": "67a408ad75b64482c015c1d06fb9fcf0d80db1335a914101bbd1a5c77170e1df",
+  "meta/CHANGELOG.md": "32957c29d7151e7bd8d0ee934d03de95bcec39d537e56ae0a70f6601ff3fc6a7",
+  "model/model_card.json": "73fe287e60547a3467f4b8e3c5a44f072b07460184ddd14c1675a0104b73a752",
   "model/model.gguf": "afb91452ccedce1ed27ddb87f9baa5a501eca17822363c247f7658c80c7171bf",
-  "eval/eval_report.json": "112e532475957d74c4e07343d7fb0c2128f8f37690e0f20c78ad9484167255b4",
+  "eval/eval_report.json": "fc663a6346037ae7f87dea6df045baefe1dcfb9df9f3d37bb180af1ab2b69d8d",
   "index/index.sqlite": "59f7868545ede9d44d500e43fe4f73c08e942900661ef3388f60cf5d5ef8b592",
-  "contracts/manifest.schema.json": "fd97f09e0d368fb68435498457fadacdd7720ff39ac5e73234ffc91f5ef1bb34",
-  "contracts/model_card.schema.json": "2b4212e8928ce3a3f243ce83873180e46b6945b39c65658fec67be698bf4b3ae",
-  "contracts/eval_report.schema.json": "6c6157bf90291f46d26191d9342a6311beb3ce594df2939580ad45c9b6793186"
+  "contracts/manifest.schema.json": "a9bb187e58c8288f9b3c435be073e0a95653e75245381b10e5c53df7e64d584a",
+  "contracts/model_card.schema.json": "8e8449c8abda556b9779341e3cca9dd7bc62575d63d0ae7d32880cdce81940bc",
+  "contracts/eval_report.schema.json": "6c6157bf90291f46d26191d9342a6311beb3ce594df2939580ad45c9b6793186",
+  "model/adapter/adapters.safetensors": "1229383775d0fb9facce1e8f5ebc0f3f98d7d5ed447724f17a8bff59837c2ec9",
+  "model/adapter/adapter_config.json": "806ad0eb6eedb187a46a6627889f535426dd3deba8df3537b475158c75bd728a"
 }

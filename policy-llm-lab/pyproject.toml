@@ -9,6 +9,7 @@ dependencies = [
   "uvicorn>=0.23",
   "pydantic>=2.5",
   "jsonschema>=4.20",
+  "pypdf>=4.0",
 ]
 
 [build-system]
@@ -21,6 +22,14 @@ dev = [
   "httpx>=0.26",
   "ruff>=0.1",
   "mypy>=1.7",
+]
+train = [
+  "transformers>=4.40",
+  "datasets>=2.18",
+  "accelerate>=0.29",
+  "peft>=0.10",
+  "trl>=0.9",
+  "mlx-lm>=0.10; platform_system == \"Darwin\"",
 ]
 
 [tool.setuptools.packages.find]

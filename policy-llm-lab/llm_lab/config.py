@@ -4,7 +4,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data" / "sample_docs"
+PDF_DIR = ROOT / "data" / "pdfs"
 ARTIFACTS_DIR = ROOT / "artifacts"
+INGEST_DIR = ARTIFACTS_DIR / "ingest"
 INDEX_DIR = ARTIFACTS_DIR / "index"
 MODEL_DIR = ARTIFACTS_DIR / "model"
 EVAL_DIR = ARTIFACTS_DIR / "eval"
