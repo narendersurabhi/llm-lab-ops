@@ -6,6 +6,7 @@ from typing import Any, Callable, Literal, TypedDict
 from langgraph.graph import END, StateGraph
 from opentelemetry import trace
 
+from llm_ops.config import settings
 from llm_ops.model import ModelClient
 from llm_ops.tools import (
     Citation,
@@ -108,7 +109,8 @@ def make_retrieve_node(retrieval: RetrievalTool) -> Callable[[AgentState], Any]:
     async def retrieve_node(state: AgentState) -> dict[str, Any]:
         with tracer.start_as_current_span("node_retrieve"):
             query = state.get("query", "")
-            contexts = await retrieval.run(query, top_k=3)
+            top_k = max(1, min(settings.retrieval_top_k, 10))
+            contexts = await retrieval.run(query, top_k=top_k)
             return {"contexts": contexts, "retrieval_hit": bool(contexts)}
 
     return retrieve_node

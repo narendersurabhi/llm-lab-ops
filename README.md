@@ -104,9 +104,15 @@ Metrics exposed by gateway:
 make release   # generate eval + model card artifacts
 make test      # lint, typecheck, unit + integration tests
 make lint      # lint only
-make loadtest  # basic load test against gateway
+make loadtest  # load test + report (p50/p95/p99, RPS, error rate)
 make kind-up   # kind cluster + helm install
 ```
+
+Load test overrides:
+```bash
+LOADTEST_REQUESTS=500 LOADTEST_CONCURRENCY=40 LOADTEST_OUTPUT=logs/loadtest_report.json make loadtest
+```
+The report is printed to stdout and saved as JSON (default: `logs/loadtest_report.json`).
 
 ## Release bundle demo
 ```bash
@@ -117,6 +123,32 @@ RELEASE_PATH=policy-llm-lab/release LLM_PROVIDER=mock make up
 ```
 
 The gateway validates the bundle, gates on `eval_report.pass`, and runs canary routing at 5%.
+
+## How to scale this
+
+Start by scaling replicas, then tune runtime limits. Use these knobs together:
+
+| Area | Knob | Default | Effect |
+|---|---|---:|---|
+| Gateway concurrency | `GATEWAY_MAX_INFLIGHT` | `64` | Max concurrent in-flight requests per instance |
+| Gateway backlog | `GATEWAY_MAX_QUEUE` | `256` | Max pending requests before immediate 503 |
+| Queue latency cap | `GATEWAY_QUEUE_TIMEOUT_MS` | `250` | Max wait for an inflight slot before 503 |
+| Model timeout | `LLAMA_TIMEOUT_S` | `30` | Upper bound for one llama.cpp call |
+| Model retries | `LLAMA_MAX_RETRIES` | `1` | Retry count for transient model failures |
+| Retry backoff | `LLAMA_RETRY_BACKOFF_MS` | `100` | Exponential retry base delay |
+| Retrieval breadth | `RETRIEVAL_TOP_K` | `3` | Retrieved context count (quality/latency tradeoff) |
+| Canary pressure | `CANARY_MIN_SAMPLES` / `CANARY_SLO_WINDOW` | `30` / `200` | Rollout sensitivity and stabilization window |
+
+Recommended scaling order:
+1. Scale out gateway replicas.
+2. Increase `GATEWAY_MAX_INFLIGHT` gradually while watching p95/p99.
+3. Keep queue bounds tight; avoid masking overload with a deep queue.
+4. Tune retry limits only after confirming upstream model stability.
+5. Adjust `RETRIEVAL_TOP_K` only if quality metrics justify added latency.
+
+Supporting docs:
+- `docs/failure-modes.md`
+- `docs/design-tradeoffs.md`
 
 ## Notes
 - TTFT is approximated for non-streaming llama.cpp calls (same as latency).
