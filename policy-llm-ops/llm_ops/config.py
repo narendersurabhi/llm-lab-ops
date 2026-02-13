@@ -14,6 +14,9 @@ class Settings:
         self.release_id = os.getenv("RELEASE_ID")
         self.llama_cpp_url = os.getenv("LLAMA_CPP_URL", "http://llama:8080")
         self.llm_provider = os.getenv("LLM_PROVIDER", "llama_cpp")
+        self.llama_timeout_s = float(os.getenv("LLAMA_TIMEOUT_S", "30"))
+        self.llama_max_retries = int(os.getenv("LLAMA_MAX_RETRIES", "1"))
+        self.llama_retry_backoff_ms = float(os.getenv("LLAMA_RETRY_BACKOFF_MS", "100"))
         self.model_dir = Path(os.getenv("MODEL_DIR", "/models"))
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
         self.prompt_sample_rate = float(os.getenv("PROMPT_SAMPLE_RATE", "0.0"))
@@ -22,6 +25,10 @@ class Settings:
         self.canary_min_samples = int(os.getenv("CANARY_MIN_SAMPLES", "30"))
         self.canary_slo_window = int(os.getenv("CANARY_SLO_WINDOW", "200"))
         self.citation_min_coverage = float(os.getenv("CITATION_MIN_COVERAGE", "0.5"))
+        self.gateway_max_inflight = int(os.getenv("GATEWAY_MAX_INFLIGHT", "64"))
+        self.gateway_max_queue = int(os.getenv("GATEWAY_MAX_QUEUE", "256"))
+        self.gateway_queue_timeout_ms = float(os.getenv("GATEWAY_QUEUE_TIMEOUT_MS", "250"))
+        self.retrieval_top_k = int(os.getenv("RETRIEVAL_TOP_K", "3"))
         self.redact_logs = os.getenv("REDACT_LOGS", "true").lower() == "true"
 
 
