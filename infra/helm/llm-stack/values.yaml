@@ -10,6 +10,13 @@ llmOps:
     MODEL_DIR: /models
     LLM_PROVIDER: mock
     LLAMA_CPP_URL: http://llama:8080
+    LLAMA_TIMEOUT_S: "30"
+    LLAMA_MAX_RETRIES: "1"
+    LLAMA_RETRY_BACKOFF_MS: "100"
+    GATEWAY_MAX_INFLIGHT: "64"
+    GATEWAY_MAX_QUEUE: "256"
+    GATEWAY_QUEUE_TIMEOUT_MS: "250"
+    RETRIEVAL_TOP_K: "3"
 
 modelArtifacts:
   hostPath: /models

@@ -11,6 +11,11 @@ UV_PYTHON ?= 3.11
 UV_RUN = $(UV) run --python $(UV_PYTHON)
 OPS_PORT ?= 8002
 UI_PORT ?= 8502
+LOADTEST_URL ?= http://localhost:$(OPS_PORT)/v1/chat/completions
+LOADTEST_REQUESTS ?= 200
+LOADTEST_CONCURRENCY ?= 20
+LOADTEST_TIMEOUT_S ?= 10
+LOADTEST_OUTPUT ?= logs/loadtest_report.json
 
 up:
 	OPS_PORT=$(OPS_PORT) UI_PORT=$(UI_PORT) docker compose up -d --build
@@ -36,7 +41,12 @@ kind-up:
 	helm upgrade --install llm-stack infra/helm/llm-stack
 
 loadtest:
-	python scripts/loadtest.py
+	$(PYTHON) scripts/loadtest.py \
+		--url $(LOADTEST_URL) \
+		--requests $(LOADTEST_REQUESTS) \
+		--concurrency $(LOADTEST_CONCURRENCY) \
+		--timeout-s $(LOADTEST_TIMEOUT_S) \
+		--output $(LOADTEST_OUTPUT)
 
 release:
 	$(MAKE) -C policy-llm-lab release

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import time
 import uuid
 from datetime import datetime, timezone
@@ -41,6 +43,41 @@ canary: CanaryController | None = None
 release_bundle: ReleaseBundle | None = None
 release_manager = ReleaseManager()
 tracer = trace.get_tracer(__name__)
+
+
+class OverloadController:
+    def __init__(self, max_inflight: int, max_queue: int, queue_timeout_ms: float) -> None:
+        self.max_inflight = max(1, max_inflight)
+        self.max_queue = max(self.max_inflight, max_queue)
+        self.queue_timeout_s = max(0.001, queue_timeout_ms / 1000.0)
+        self._semaphore = asyncio.Semaphore(self.max_inflight)
+        self._pending = 0
+        self._lock = asyncio.Lock()
+
+    async def try_enter(self) -> str | None:
+        async with self._lock:
+            if self._pending >= self.max_queue:
+                return "queue_full"
+            self._pending += 1
+        try:
+            await asyncio.wait_for(self._semaphore.acquire(), timeout=self.queue_timeout_s)
+            return None
+        except TimeoutError:
+            async with self._lock:
+                self._pending = max(0, self._pending - 1)
+            return "queue_timeout"
+
+    async def exit(self) -> None:
+        self._semaphore.release()
+        async with self._lock:
+            self._pending = max(0, self._pending - 1)
+
+
+overload_controller = OverloadController(
+    max_inflight=settings.gateway_max_inflight,
+    max_queue=settings.gateway_max_queue,
+    queue_timeout_ms=settings.gateway_queue_timeout_ms,
+)
 
 
 def _build_model(is_canary: bool, bundle: ReleaseBundle | None = None) -> ModelClient:
@@ -165,94 +202,104 @@ async def chat_completions(
 ) -> ChatCompletionResponse:
     if agent is None:
         raise HTTPException(status_code=500, detail="Agent runtime not initialized")
+    queue_status = await overload_controller.try_enter()
+    if queue_status == "queue_full":
+        raise HTTPException(status_code=503, detail="Gateway overloaded: request queue is full")
+    if queue_status == "queue_timeout":
+        raise HTTPException(status_code=503, detail="Gateway overloaded: request queue timeout")
+
     req_id = request_id_var.get() or str(uuid.uuid4())
-    start = time.perf_counter()
-    variant = canary.choose_variant() if canary else "stable"
-    response.headers["x-llm-variant"] = variant
-    active_agent = canary_agent if variant == "canary" and canary_agent else agent
-    if should_sample_prompt():
-        log_event(logger, "prompt_sample", messages=[m.model_dump() for m in req.messages])
+    try:
+        start = time.perf_counter()
+        variant = canary.choose_variant() if canary else "stable"
+        response.headers["x-llm-variant"] = variant
+        active_agent = canary_agent if variant == "canary" and canary_agent else agent
+        if should_sample_prompt():
+            log_event(logger, "prompt_sample", messages=[m.model_dump() for m in req.messages])
 
-    with tracer.start_as_current_span("langgraph_run"):
-        try:
-            response = await active_agent.run([m.model_dump() for m in req.messages])
-        except Exception as exc:  # noqa: BLE001
-            if canary and variant == "canary":
-                canary.record(
-                    latency_ms=(time.perf_counter() - start) * 1000,
-                    is_error=True,
-                    tool_success=False,
-                    citation_coverage=0.0,
-                )
-            log_event(logger, "agent_error", error=str(exc))
-            raise HTTPException(status_code=500, detail="Agent failure") from exc
+        with tracer.start_as_current_span("langgraph_run"):
+            try:
+                response = await active_agent.run([m.model_dump() for m in req.messages])
+            except Exception as exc:  # noqa: BLE001
+                if canary and variant == "canary":
+                    canary.record(
+                        latency_ms=(time.perf_counter() - start) * 1000,
+                        is_error=True,
+                        tool_success=False,
+                        citation_coverage=0.0,
+                    )
+                log_event(logger, "agent_error", error=str(exc))
+                raise HTTPException(status_code=500, detail="Agent failure") from exc
 
-    latency_ms = (time.perf_counter() - start) * 1000
-    TTFT.observe(response.ttft_ms)
-    TOKENS_IN.inc(response.tokens_in)
-    TOKENS_OUT.inc(response.tokens_out)
-    CITATION_COVERAGE.set(response.citation_coverage)
+        latency_ms = (time.perf_counter() - start) * 1000
+        TTFT.observe(response.ttft_ms)
+        TOKENS_IN.inc(response.tokens_in)
+        TOKENS_OUT.inc(response.tokens_out)
+        CITATION_COVERAGE.set(response.citation_coverage)
 
-    if canary and variant == "canary":
-        canary.record(
-            latency_ms=latency_ms,
-            is_error=False,
-            tool_success=response.tool_success,
-            citation_coverage=response.citation_coverage,
-        )
+        if canary and variant == "canary":
+            canary.record(
+                latency_ms=latency_ms,
+                is_error=False,
+                tool_success=response.tool_success,
+                citation_coverage=response.citation_coverage,
+            )
 
-    payload = ChatCompletionResponse(
-        id=f"chatcmpl-{req_id}",
-        object="chat.completion",
-        created=int(datetime.now(timezone.utc).timestamp()),
-        model=req.model,
-        choices=[
-            {
-                "index": 0,
-                "message": {"role": "assistant", "content": response.content},
-                "finish_reason": "stop",
-            }
-        ],
-        usage={
-            "prompt_tokens": response.tokens_in,
-            "completion_tokens": response.tokens_out,
-            "total_tokens": response.tokens_in + response.tokens_out,
-        },
-    )
-    log_event(
-        logger,
-        "chat_completion",
-        variant=variant,
-        tokens_in=response.tokens_in,
-        tokens_out=response.tokens_out,
-        retrieval_hit=response.retrieval_hit,
-        citation_coverage=round(response.citation_coverage, 3),
-    )
-    if req.stream:
-        async def _event_stream():
-            content = payload.choices[0]["message"]["content"]
-            chunk_size = 64
-            for i in range(0, len(content), chunk_size):
-                delta = content[i : i + chunk_size]
-                data = {
-                    "id": payload.id,
-                    "object": "chat.completion.chunk",
-                    "created": payload.created,
-                    "model": payload.model,
-                    "choices": [
-                        {
-                            "index": 0,
-                            "delta": {"content": delta},
-                            "finish_reason": None,
-                        }
-                    ],
+        payload = ChatCompletionResponse(
+            id=f"chatcmpl-{req_id}",
+            object="chat.completion",
+            created=int(datetime.now(timezone.utc).timestamp()),
+            model=req.model,
+            choices=[
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": response.content},
+                    "finish_reason": "stop",
                 }
-                yield f"data: {json.dumps(data)}\n\n"
-            yield "data: [DONE]\n\n"
+            ],
+            usage={
+                "prompt_tokens": response.tokens_in,
+                "completion_tokens": response.tokens_out,
+                "total_tokens": response.tokens_in + response.tokens_out,
+            },
+        )
+        log_event(
+            logger,
+            "chat_completion",
+            variant=variant,
+            tokens_in=response.tokens_in,
+            tokens_out=response.tokens_out,
+            retrieval_hit=response.retrieval_hit,
+            citation_coverage=round(response.citation_coverage, 3),
+        )
+        if req.stream:
 
-        return StreamingResponse(_event_stream(), media_type="text/event-stream")
+            async def _event_stream():
+                content = payload.choices[0]["message"]["content"]
+                chunk_size = 64
+                for i in range(0, len(content), chunk_size):
+                    delta = content[i : i + chunk_size]
+                    data = {
+                        "id": payload.id,
+                        "object": "chat.completion.chunk",
+                        "created": payload.created,
+                        "model": payload.model,
+                        "choices": [
+                            {
+                                "index": 0,
+                                "delta": {"content": delta},
+                                "finish_reason": None,
+                            }
+                        ],
+                    }
+                    yield f"data: {json.dumps(data)}\n\n"
+                yield "data: [DONE]\n\n"
 
-    return payload
+            return StreamingResponse(_event_stream(), media_type="text/event-stream")
+
+        return payload
+    finally:
+        await overload_controller.exit()
 
 
 @app.exception_handler(HTTPException)
